@@ -1,1747 +1,2264 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<title>SNBT Editor</title>
-<meta name="color-scheme" content="only dark">
-<meta name="darkreader-lock" content="true">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2360a5fa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z'/%3E%3Cpolyline points='3.27 6.96 12 12.01 20.73 6.96'/%3E%3Cline x1='12' y1='22.08' x2='12' y2='12'/%3E%3C/svg%3E">
-<style>
-  html { background-color: #0f111a !important; color-scheme: only dark; }
-  :root {
-    --bg: #0f111a;
-    --bg2: #161824;
-    --panel: #1e2132;
-    --panel-2: #272a3d;
-    --border: #33364d;
-    --border-strong: #484c6b;
-    --text: #ffffff;
-    --text-dim: #d1d5db;
-    --muted: #9ca3af;
-    --accent: #60a5fa;
-    --accent-hover: #93c5fd;
-    --accent-soft: rgba(96,165,250,0.15);
-    --ok: #4ade80;
-    --ok-soft: rgba(74,222,128,0.15);
-    --err: #f87171;
-    --err-soft: rgba(248,113,113,0.15);
-    --warn: #fbbf24;
-    --warn-soft: rgba(251,191,36,0.15);
-    --radius: 10px;
-    --radius-sm: 7px;
-    --shadow: 0 4px 6px -1px rgba(0,0,0,0.4), 0 2px 4px -1px rgba(0,0,0,0.3);
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0 auto;
-    padding: 28px 20px 60px;
-    max-width: 1100px;
-    font-family: ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace;
-    background: var(--bg);
-    color: var(--text);
-    font-size: 14px;
-    line-height: 1.5;
-  }
-  h1 {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 20px;
-    font-weight: 600;
-    margin: 0 0 6px;
-    letter-spacing: -0.01em;
-  }
-  h1 > svg { width: 26px; height: 26px; color: var(--accent); flex: none; }
-  .sub { color: var(--muted); margin: 0 0 22px; font-size: 13px; max-width: 780px; }
-  .sub code {
-    background: var(--panel-2);
-    color: var(--text-dim);
-    padding: 1px 6px;
-    border-radius: 4px;
-    font-size: 12px;
-  }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>✦NBT Editor</title>
+    <meta name="color-scheme" content="only dark">
+    <meta name="darkreader-lock" content="true">
+        <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230a0a12'/%3E%3Crect x='5' y='5' width='22' height='22' fill='%231a0a30' stroke='%23bf00ff' stroke-width='2'/%3E%3Crect x='12' y='12' width='8' height='8' fill='none' stroke='%23bf00ff' stroke-width='2'/%3E%3C/svg%3E" />
+    
+    <!-- Embed Meta Tags -->
+    <meta property="og:site_name" content=".mcstructure NBT Editor">
+    <meta property="og:title" content="Minecraft Bedrock NBT Editor" />
+    <meta property="og:description" content="A web-based tool to edit .mcstructure files for Minecraft Bedrock Edition." />
+    <meta property="og:url" content="https://mcstructure-editor.pages.dev/" />
+    <meta property="og:image" content="https://i.imgur.com/6ZG8j3M.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="theme-color" content="#00f7ff" />
+    <meta name="twitter:card" content="summary_large_image">
+    <style>
+        @font-face {
+            font-family: 'Minecraft';
+            src: url('https://cdn.jsdelivr.net/gh/IdreesInc/Minecraft-Font@main/Minecraft.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Minecraft';
+            src: url('https://cdn.jsdelivr.net/gh/IdreesInc/Minecraft-Font@main/Minecraft-Bold.otf') format('opentype');
+            font-weight: bold;
+            font-style: normal;
+        }
+    </style>
+    <style>
+        html { background-color: #0a0a12 !important; color-scheme: only dark; }
+        :root {
+            --bg: #0a0a12;
+            --panel: #12121f;
+            --border: #2a2a4a;
+            --cyan: #00f7ff;
+            --pink: #ff00aa;
+            --purple: #bf00ff;
+            --green: #00ff9d;
+            --yellow: #ffee00;
+            --text: #e0f7ff;
+            --muted: #7a8a9a;
+            --glow-color: #00f7ff;
+        }
 
-  #drop {
-    border: 2px dashed var(--border);
-    border-radius: var(--radius);
-    padding: 40px 24px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    color: var(--text-dim);
-    background: var(--bg2);
-  }
-  #drop:hover, #drop.over {
-    border-color: var(--accent);
-    background: var(--accent-soft);
-    color: var(--accent-hover);
-  }
-  .drop-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: var(--panel);
-    margin-bottom: 12px;
-    color: var(--accent);
-    transition: all 0.2s ease;
-  }
-  .drop-icon svg { width: 28px; height: 28px; }
-  #drop:hover .drop-icon, #drop.over .drop-icon { background: var(--accent); color: var(--bg); }
-  .drop-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
-  #drop:hover .drop-title, #drop.over .drop-title { color: var(--accent-hover); }
-  .drop-sub { font-size: 12px; color: var(--muted); }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Minecraft', sans-serif;
+            font-size: 22px;
+            word-spacing: 0px; /* ADDED THIS LINE */
+            font-style: normal;
+            font-weight: normal;
+            -webkit-font-smoothing: none;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeSpeed;
+        }
 
-  #status {
-    margin-top: 14px;
-    padding: 11px 14px;
-    border-radius: var(--radius-sm);
-    background: var(--panel);
-    border: 1px solid var(--border);
-    display: none;
-    font-size: 13px;
-  }
-  #status.ok { border-color: var(--ok); background: var(--ok-soft); color: #bbf7d0; }
-  #status.err { border-color: var(--err); background: var(--err-soft); color: #fecaca; }
-  #status.warn { border-color: var(--warn); background: var(--warn-soft); color: #fde68a; }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
 
-  #output { margin-top: 20px; }
+        #bg-canvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
 
-  .panel {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px 18px;
-    margin-bottom: 14px;
-    box-shadow: var(--shadow);
-  }
-  .panel h2 {
-    font-size: 12px;
-    font-weight: 600;
-    margin: 0 0 12px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
+        .screen {
+            position: absolute;
+            inset: 0;
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            scrollbar-gutter: stable;
+            transition: all 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+        }
 
-  .kv { display: grid; grid-template-columns: max-content 1fr; gap: 6px 20px; font-size: 13px; }
-  .kv .k { color: var(--muted); }
+        #listScreen {
+            opacity: 1;
+            transform: scale(1);
+            filter: blur(0);
+            pointer-events: all;
+        }
+        #listScreen.hidden {
+            opacity: 0;
+            transform: scale(1.3);
+            filter: blur(10px);
+            pointer-events: none;
+        }
 
-  .btn-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 1px solid var(--border);
-  }
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 9px 14px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border-strong);
-    background: var(--panel-2);
-    color: var(--text);
-    font: inherit;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    white-space: nowrap;
-  }
-  .btn:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-hover); }
-  .btn:active { transform: translateY(1px); }
-  .btn.primary { background: var(--accent); border-color: var(--accent); color: #0a1020; }
-  .btn.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: #0a1020; }
-  .btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+        #detailScreen {
+            opacity: 0;
+            transform: scale(0.85);
+            filter: blur(10px);
+            pointer-events: none;
+        }
+        #detailScreen.active {
+            opacity: 1;
+            transform: scale(1);
+            filter: blur(0);
+            pointer-events: all;
+        }
 
-  .snbt-editor {
-    width: 100%;
-    min-height: 320px;
-    max-height: 640px;
-    padding: 12px 14px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border);
-    background: var(--bg2);
-    color: var(--text);
-    font: inherit;
-    font-size: 12px;
-    line-height: 1.55;
-    resize: vertical;
-    tab-size: 4;
-    outline: none;
-    transition: border-color 0.15s;
-  }
-  .snbt-editor:focus { border-color: var(--accent); }
-  .snbt-editor.dirty { border-color: var(--warn); }
+        /* Toolbar */
+        .toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: linear-gradient(90deg, #0c0c18, #1a0a28, #0c0c18);
+            border-bottom: 4px solid var(--cyan);
+            box-shadow: 0 0 28px rgba(0, 247, 255, 0.35);
+            padding: 11px 16px;
+            padding-left: 32px; /* Matches the content container's left gap */
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
 
-  .palette { display: flex; flex-direction: column; gap: 2px; font-size: 12px; }
-  .palette .row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 4px 6px;
-    border-radius: 4px;
-  }
-  .palette .row:hover { background: var(--panel-2); }
-  .palette .swatch { width: 16px; height: 16px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.15); flex: none; }
-  .palette .idx { color: var(--muted); min-width: 28px; text-align: right; font-size: 11px; }
-  .palette .states { color: var(--muted); font-size: 11px; }
+        .toolbar::after {
+            content: "";
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, var(--cyan), var(--pink), var(--cyan), transparent);
+            background-size: 200% 100%;
+            animation: borderFlow 3s linear infinite;
+        }
 
-  .slices { display: flex; flex-wrap: wrap; gap: 12px; }
-  .slice { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; }
-  .slice h3 {
-    font-size: 11px;
-    margin: 0 0 8px;
-    color: var(--muted);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-  .grid { display: grid; gap: 2px; }
-  .cell {
-    width: 26px; height: 26px;
-    border-radius: 3px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-    color: #fff;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
-    cursor: help;
-  }
-  .cell.empty {
-    background: repeating-linear-gradient(45deg, #20212c, #20212c 4px, #1a1b23 4px, #1a1b23 8px);
-    color: var(--muted);
-  }
+        @keyframes borderFlow {
+            0% {
+                background-position: 0% 50%;
+            }
+            100% {
+                background-position: 200% 50%;
+            }
+        }
 
-  pre {
-    margin: 0;
-    white-space: pre-wrap;
-    word-break: break-all;
-    font-size: 12px;
-    max-height: 400px;
-    overflow: auto;
-    padding: 10px;
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-  }
+        .toolbar button {
+            background: transparent;
+            color: var(--cyan);
+            border: 3px solid var(--cyan);
+            padding: 8px 13px;
+            border-radius: 2px;
+            cursor: pointer;
+            font-size: 22px;
+            letter-spacing: normal;
+            text-transform: uppercase;
+            transition: all 0.2s;
+            box-shadow: 0 0 12px rgba(0, 247, 255, 0.25);
+            position: relative;
+            overflow: hidden;
+        }
 
-  details summary { cursor: pointer; color: var(--muted); font-size: 12px; padding: 6px 0; user-select: none; }
-  details summary:hover { color: var(--text-dim); }
-  details[open] summary { margin-bottom: 6px; }
+        .toolbar button:hover:not(:disabled) {
+            background: rgba(0, 247, 255, 0.12);
+            box-shadow: 0 0 24px rgba(0, 247, 255, 0.65);
+            text-shadow: 0 0 10px var(--cyan);
+            transform: translateY(-2px);
+        }
 
-  .note { color: var(--muted); font-size: 12px; margin-top: 6px; margin-bottom: 10px; }
-  .note.warn { color: var(--warn); }
+        .toolbar button:active:not(:disabled) {
+            transform: scale(0.94);
+        }
+        .toolbar button:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
 
-  ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-  }
-  ::-webkit-scrollbar-track {
-    background: var(--bg2);
-    border-radius: 4px;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: var(--border-strong);
-    border-radius: 4px;
-    border: 2px solid var(--bg2);
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: var(--muted);
-  }
-  ::-webkit-scrollbar-corner {
-    background: var(--bg2);
-  }
+        .toolbar button.primary {
+            border-color: var(--pink);
+            color: var(--pink);
+            box-shadow: 0 0 12px rgba(255, 0, 170, 0.35);
+        }
 
-  .drop-overlay {
-    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-    background: rgba(15, 17, 26, 0.85); backdrop-filter: blur(6px);
-    display: none; align-items: center; justify-content: center;
-    z-index: 9999; pointer-events: none;
-  }
-  .drop-overlay.active { display: flex; }
-  .drop-overlay-content {
-    border: 3px dashed var(--accent); border-radius: var(--radius);
-    padding: 50px 80px; text-align: center; background: var(--panel);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.6); pointer-events: auto;
-    animation: pulse-border 2s infinite;
-  }
-  @keyframes pulse-border {
-    0% { border-color: var(--accent); }
-    50% { border-color: var(--accent-hover); }
-    100% { border-color: var(--accent); }
-  }
-</style>
+        .toolbar button.primary:hover:not(:disabled) {
+            background: rgba(255, 0, 170, 0.12);
+            box-shadow: 0 0 26px rgba(255, 0, 170, 0.75);
+            text-shadow: 0 0 12px var(--pink);
+        }
+
+        .toolbar button.green {
+            border-color: var(--green);
+            color: var(--green);
+            box-shadow: 0 0 12px rgba(0, 255, 157, 0.35);
+        }
+        .toolbar button.green:hover:not(:disabled) {
+            background: rgba(0, 255, 157, 0.12);
+            box-shadow: 0 0 26px rgba(0, 255, 157, 0.75);
+            text-shadow: 0 0 12px var(--green);
+        }
+
+        .toolbar button.back-btn {
+            border-color: var(--yellow);
+            color: var(--yellow);
+        }
+
+        .toolbar button.back-btn:hover {
+            background: rgba(255, 238, 0, 0.1);
+            box-shadow: 0 0 22px rgba(255, 238, 0, 0.55);
+        }
+
+        .status {
+            margin-left: auto;
+            font-size: 22px;
+            color: var(--green);
+            text-shadow: 0 0 10px rgba(0, 255, 157, 0.55);
+        }
+
+        /* List */
+        .list-container {
+            padding: 22px;
+            padding-left: 32px; /* Balances the 10px scrollbar on the right */
+            position: relative;
+        }
+
+        .list-title {
+            font-size: 22px;
+            color: var(--cyan);
+            text-shadow: 0 0 14px rgba(0, 247, 255, 0.5);
+            margin-bottom: 18px;
+            letter-spacing: 2px;
+            text-align: center;
+        }
+
+        .chest-wrapper {
+            margin-bottom: 30px;
+            border: 3px solid var(--border);
+            background: rgba(14, 14, 26, 0.92);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.6);
+            padding: 15px;
+            animation: chestOpen 0.5s ease-out;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        @keyframes chestOpen {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .chest-wrapper:hover {
+            border-color: var(--glow-color);
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), 0 0 20px var(--glow-color);
+        }
+
+        .chest-header {
+            font-size: 22px;
+            color: var(--yellow);
+            text-shadow: 0 0 10px rgba(255, 238, 0, 0.5);
+            margin-bottom: 10px;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+
+        .chest-grid {
+            display: grid;
+            grid-template-columns: repeat(9, 50px);
+            gap: 4px;
+            justify-content: center;
+        }
+
+        .chest-slot {
+            width: 50px;
+            height: 50px;
+            background: #1a1a2e;
+            border: 2px solid #333;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+            image-rendering: pixelated;
+            overflow: hidden;
+        }
+
+        .chest-slot:hover {
+            border-color: var(--cyan);
+            box-shadow: 0 0 12px var(--cyan);
+            transform: scale(1.08);
+        }
+
+        .chest-slot img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            image-rendering: pixelated;
+            position: relative;
+            z-index: 1;
+        }
+
+        .chest-slot .count {
+            position: absolute;
+            bottom: 2px;
+            right: 4px;
+            color: white;
+            text-shadow: 1px 1px 0 #000;
+            font-size: 15px;
+            font-family: 'Minecraft', sans-serif;
+            z-index: 3;
+        }
+
+        /* Minecraft-style enchantment glint */
+        .chest-slot.has-glint::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            pointer-events: none;
+            background: linear-gradient(
+                115deg,
+                transparent 20%,
+                rgba(180, 100, 255, 0.15) 35%,
+                rgba(255, 255, 255, 0.55) 48%,
+                rgba(200, 140, 255, 0.45) 52%,
+                rgba(180, 100, 255, 0.15) 65%,
+                transparent 80%
+            );
+            background-size: 250% 100%;
+            animation: glintSweep 3s linear infinite;
+            mix-blend-mode: soft-light;
+        }
+
+        .chest-slot.has-glint::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            pointer-events: none;
+            background: linear-gradient(
+                115deg,
+                transparent 10%,
+                rgba(120, 60, 220, 0.12) 40%,
+                rgba(255, 200, 255, 0.25) 50%,
+                rgba(120, 60, 220, 0.12) 60%,
+                transparent 90%
+            );
+            background-size: 300% 100%;
+            animation: glintSweep 3.4s linear infinite reverse;
+            mix-blend-mode: overlay;
+            opacity: 0.85;
+        }
+
+        @keyframes glintSweep {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Edited item: outline + star badge */
+        .chest-slot.edited {
+            border-color: var(--yellow);
+            box-shadow: 0 0 10px rgba(255, 238, 0, 0.45), inset 0 0 6px rgba(255, 238, 0, 0.12);
+        }
+
+        .chest-slot.edited:hover {
+            border-color: var(--yellow);
+            box-shadow: 0 0 16px rgba(255, 238, 0, 0.7), 0 0 12px var(--cyan);
+        }
+
+        .chest-slot .edit-star {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 4;
+            width: 14px;
+            height: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            line-height: 1;
+            color: var(--yellow);
+            text-shadow:
+                0 0 4px rgba(255, 238, 0, 0.9),
+                1px 1px 0 #000,
+                -1px -1px 0 #000;
+            pointer-events: none;
+            animation: starPulse 1.8s ease-in-out infinite;
+        }
+
+        @keyframes starPulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.15); opacity: 0.85; }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 70px 20px;
+            color: var(--muted);
+            font-size: 22px;
+            line-height: 2;
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: fixed;
+            pointer-events: none;
+            z-index: 1000;
+            background: #100015;
+            border: 2px solid #3a1a5c;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.8), inset 0 0 10px rgba(0, 0, 0, 0.5);
+            padding: 8px 10px;
+            max-width: 500px;
+            width: max-content;
+            font-family: 'Minecraft', monospace;
+            font-size: 11px;
+            color: #ffffff;
+            display: none;
+            line-height: 1.25;
+            white-space: pre-wrap;
+        }
+
+        .tooltip div {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+
+        .tooltip .name {
+            font-size: 13px;
+            line-height: 1.25;
+        }
+        .tooltip .enchant {
+            color: #7a7a7a;
+        }
+        .tooltip .lore {
+            color: #ffffff;
+            font-size: 11px;
+            line-height: 1.25;
+        }
+        .tooltip .keep {
+            /* color/italic come from § codes via parseMC */
+        }
+
+        /* Detail cards */
+        .detail-container {
+            padding: 22px;
+            padding-left: 32px; /* Balances the 10px scrollbar on the right */
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            max-width: 1300px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Define the 2-column layout side-by-side */
+        .detail-container {
+            grid-template-areas:
+                "selected preview"
+                "rename preview"
+                "lore preview"
+                "flags preview";
+        }
+
+        .detail-container .card:nth-child(1) {
+            grid-area: preview;
+            align-self: start;
+            height: fit-content;
+        }
+        .detail-container .card:nth-child(2) { grid-area: selected; }
+        .detail-container .card:nth-child(3) { grid-area: rename; }
+        .detail-container .card:nth-child(4) { grid-area: lore; }
+        .detail-container .card:nth-child(5) { grid-area: flags; }
+
+        .card {
+            background: rgba(14, 14, 26, 0.93);
+            border: 3px solid var(--border);
+            padding: 16px;
+            position: relative;
+            animation: cardEnter 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+        }
+
+        .card:nth-child(1) {
+            animation-delay: 0.05s;
+        }
+        .card:nth-child(2) {
+            animation-delay: 0.11s;
+        }
+        .card:nth-child(3) {
+            animation-delay: 0.17s;
+        }
+        .card:nth-child(4) {
+            animation-delay: 0.23s;
+        }
+        .card:nth-child(5) {
+            animation-delay: 0.29s;
+        }
+        .card:nth-child(6) {
+            animation-delay: 0.35s;
+        }
+
+        @keyframes cardEnter {
+            from {
+                opacity: 0;
+                transform: translateY(22px) scale(0.97);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+        }
+
+        .card h3 {
+            font-size: 22px;
+            color: var(--pink);
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px rgba(255, 0, 170, 0.45);
+        }
+
+        .selected-header {
+            display: flex;
+            align-items: left;
+            gap: 16px;
+            flex-direction: row-reverse; /* Moves icon to the right */
+        }
+
+        .selected-header .detail-icon-wrap {
+            width: 52px;
+            height: 52px;
+            position: relative;
+            flex-shrink: 0;
+            border: 3px solid #333;
+            background: #111;
+            overflow: hidden;
+            image-rendering: pixelated;
+        }
+
+        .selected-header .detail-icon-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            image-rendering: pixelated;
+            position: relative;
+            z-index: 1;
+            border: none;
+            background: transparent;
+            display: block;
+        }
+
+        /* Glint on editor detail icon (same effect as list slots) */
+        .selected-header .detail-icon-wrap.has-glint::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            pointer-events: none;
+            background: linear-gradient(
+                115deg,
+                transparent 20%,
+                rgba(180, 100, 255, 0.15) 35%,
+                rgba(255, 255, 255, 0.55) 48%,
+                rgba(200, 140, 255, 0.45) 52%,
+                rgba(180, 100, 255, 0.15) 65%,
+                transparent 80%
+            );
+            background-size: 250% 100%;
+            animation: glintSweep 2.2s linear infinite;
+            mix-blend-mode: soft-light;
+        }
+
+        .selected-header .detail-icon-wrap.has-glint::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            pointer-events: none;
+            background: linear-gradient(
+                115deg,
+                transparent 10%,
+                rgba(120, 60, 220, 0.12) 40%,
+                rgba(255, 200, 255, 0.25) 50%,
+                rgba(120, 60, 220, 0.12) 60%,
+                transparent 90%
+            );
+            background-size: 300% 100%;
+            animation: glintSweep 3.4s linear infinite reverse;
+            mix-blend-mode: overlay;
+            opacity: 0.85;
+        }
+
+        .selected-header .name {
+            color: var(--yellow);
+            font-size: 22px;
+            text-shadow: 0 0 10px rgba(255, 238, 0, 0.45);
+        }
+
+        .preview-box {
+            background: #100015;
+            border: 2px solid #3a1a5c;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.8), inset 0 0 10px rgba(0, 0, 0, 0.5);
+            padding: 8px 10px;
+            max-width: 500px;
+            width: max-content;
+            min-width: 0;
+            font-family: 'Minecraft', monospace;
+            font-size: 11px;
+            color: #ffffff;
+            line-height: 1.25;
+            display: inline-block;
+            vertical-align: top;
+            height: fit-content;
+        }
+
+        .preview-box .name {
+            font-size: 13px;
+            line-height: 1.25;
+            margin: 0;
+            white-space: pre-wrap;
+        }
+
+        .preview-box .lore {
+            color: #ffffff;
+            font-size: 11px;
+            line-height: 1.25;
+            margin: 0;
+            white-space: pre-wrap;
+        }
+
+        .preview-box .keep {
+            font-size: 18px;
+            line-height: 1.25;
+            margin: 0;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            background: #080812;
+            border: 3px solid #24344f;
+            color: #e0e0e0;
+            padding: 11px 13px;
+            font-size: 18px;
+            transition: all 0.25s;
+            box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.6);
+            word-spacing: 0px; /* ADDED THIS LINE */
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--cyan);
+            box-shadow: 0 0 20px rgba(0, 247, 255, 0.3), inset 0 0 12px rgba(0, 0, 0, 0.6);
+        }
+
+        textarea {
+            min-height: 115px;
+            color: #c0d0e0;
+            font-size: 18px;
+            resize: none;
+            overflow: hidden;
+            line-height: 1.5;
+        }
+
+        /* Rename input starts at 1 line and expands only on new lines */
+        #nameInput {
+            height: auto;
+            min-height: 45px;
+            resize: none;
+            overflow: hidden;
+        }
+
+        .hint {
+            font-size: 15px;
+            color: var(--muted);
+            margin-top: 7px;
+        }
+
+        .flags {
+            display: flex;
+            flex-direction: column;
+            gap: 11px;
+        }
+
+        .flag {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 11px;
+            cursor: pointer;
+            padding: 9px;
+            transition: 0.2s;
+        }
+
+        .flag:hover {
+            background: rgba(0, 247, 255, 0.06);
+        }
+
+        .flag input {
+            width: 17px;
+            height: 17px;
+            accent-color: var(--pink);
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .actions button {
+            background: transparent;
+            color: var(--green);
+            border: 3px solid var(--green);
+            padding: 11px 16px;
+            font-size: 10px;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 0 14px rgba(0, 255, 157, 0.25);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .actions button:hover {
+            background: rgba(0, 255, 157, 0.12);
+            box-shadow: 0 0 26px rgba(0, 255, 157, 0.5);
+            text-shadow: 0 0 10px var(--green);
+            transform: translateY(-2px);
+        }
+
+        .actions button.green {
+            color: var(--green);
+            border-color: var(--green);
+        }
+        .actions button.green:hover {
+            background: rgba(0, 255, 157, 0.12);
+            box-shadow: 0 0 26px rgba(0, 255, 157, 0.5);
+            text-shadow: 0 0 10px var(--green);
+            transform: translateY(-2px);
+        }
+
+        .actions button.secondary {
+            color: var(--cyan);
+            border-color: var(--cyan);
+        }
+
+        .actions button.secondary:hover {
+            background: rgba(0, 247, 255, 0.1);
+            box-shadow: 0 0 24px rgba(0, 247, 255, 0.45);
+        }
+
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.35);
+            transform: scale(0);
+            animation: ripple 0.55s linear;
+            pointer-events: none;
+        }
+
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent; /* Makes it an overlay */
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2a3a5a;
+            border-radius: 5px; /* Rounds the edges for a floating pill look */
+            border: 2px solid transparent; /* Gives it breathing room */
+            background-clip: padding-box;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--cyan);
+            border: 2px solid transparent;
+            background-clip: padding-box;
+        }
+
+        .glow-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 50%, transparent 30%, var(--glow-color) 100%);
+            opacity: 0.1;
+            pointer-events: none;
+            z-index: 1;
+            transition: opacity 0.3s;
+        }
+
+        /* Loading Overlay */
+        #loadingOverlay {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            background: rgba(10, 10, 18, 0.85);
+            backdrop-filter: blur(8px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            /* Slow fade out */
+            transition: opacity 0.8s ease-in-out;
+        }
+
+        #loadingOverlay.active {
+            opacity: 1;
+            pointer-events: auto;
+            /* Instant pop in */
+            transition: opacity 0.05s ease-in;
+        }
+
+        .loading-spinner {
+            color: var(--cyan);
+            width: 100px;
+            height: 100px;
+            filter: drop-shadow(0 0 15px var(--cyan));
+        }
+
+        .loading-text {
+            margin-top: 20px;
+            color: var(--cyan);
+            font-size: 18px;
+            text-shadow: 0 0 10px var(--cyan);
+            animation: pulseText 1.5s infinite alternate;
+        }
+
+        @keyframes pulseText {
+            from { opacity: 0.5; }
+            to { opacity: 1; }
+        }
+    </style>
 </head>
 <body>
-<h1>
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-    <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-    <line x1="12" y1="22.08" x2="12" y2="12"/>
-  </svg>
-  <span>Bedrock .mcstructure Viewer / Editor</span>
-</h1>
-<div class="sub">Drop a Bedrock <code>.mcstructure</code> file (binary NBT), or the JSON export from another tool. Edit the SNBT, then download a fresh <code>.mcstructure</code>. Everything runs locally in your browser.</div>
-<div style="margin-bottom: 20px;">
-  <button class="btn primary" id="browse-btn" style="padding: 12px 20px; font-size: 14px;">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width: 18px; height: 18px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-    <span>Open .mcstructure file</span>
-  </button>
-</div>
 
-<div id="drop-overlay" class="drop-overlay">
-  <div class="drop-overlay-content">
-    <div class="drop-icon" style="width: 80px; height: 80px; margin-bottom: 20px;">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width: 40px; height: 40px;">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-        <polyline points="17 8 12 3 7 8"/>
-        <line x1="12" y1="3" x2="12" y2="15"/>
-      </svg>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay">
+        <svg class="loading-spinner" version="1.1" id="L6" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 100 100" enable-background="new 0 0 100 100" xml:space="preserve">
+            <rect fill="none" stroke="currentColor" stroke-width="4" x="25" y="25" width="50" height="50">
+                <animateTransform attributeName="transform" dur="0.6s" from="0 50 50" to="180 50 50" type="rotate" id="strokeBox" attributeType="XML" begin="rectBox.end"/>
+            </rect>
+            <rect x="27" y="27" fill="currentColor" width="46" height="50">
+                <animate attributeName="height" dur="0.9s" attributeType="XML" from="50" to="0" id="rectBox" fill="freeze" begin="0s;strokeBox.end"/>
+            </rect>
+        </svg>
+        <div class="loading-text">FETCHING ITEM DATA...</div>
     </div>
-    <div class="drop-title" style="font-size: 20px; margin-bottom: 8px;">Drop your .mcstructure file</div>
-    <div class="drop-sub" style="font-size: 14px;">Release to load</div>
-  </div>
+
+    <canvas id="bg-canvas"></canvas>
+    <div class="glow-overlay" id="glowOverlay"></div>
+
+    <!-- Drop Overlay -->
+    <div id="dropOverlay"
+    style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.35); backdrop-filter:blur(3px); justify-content:center; align-items:center; pointer-events:none;">
+    <div style="text-align:center; color:var(--cyan); font-size:28px; text-shadow:0 0 30px var(--cyan); border:4px dashed var(--cyan); padding:40px 60px; background:rgba(0,0,0,0.35); border-radius:12px;">
+        <div style="font-size:48px; margin-bottom:12px;">↓</div>
+        DROP HERE TO IMPORT
+        <div style="font-size:14px; color:var(--muted); margin-top:10px;">.mcstructure file</div>
+    </div>
 </div>
 
-<input type="file" id="file" accept=".mcstructure,.nbt,.json,.txt" hidden>
-<div id="status"></div>
-<div id="output"></div>
+<!-- LIST SCREEN -->
+<div class="screen" id="listScreen">
+    <div class="toolbar">
+        <button class="primary" id="btnOpen">OPEN</button>
+        <button class="green" id="btnSave" disabled>APPLY + SAVE</button>
+        <button id="btnGlintAll" disabled>GLINT: OFF</button>
+        <button id="btnKeepAll" disabled>KEEP: OFF</button>
+        <div class="status" id="status">No file loaded</div>
+    </div>
 
-<script>
-// ========== NBT reader (little-endian, Bedrock) ==========
-class NBTReader {
-  constructor(bytes, le = true) {
-    this.bytes = bytes;
-    this.view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-    this.le = le;
-    this.pos = 0;
-  }
-  u8()  { const v = this.view.getUint8(this.pos); this.pos += 1; return v; }
-  i8()  { const v = this.view.getInt8(this.pos);  this.pos += 1; return v; }
-  u16() { const v = this.view.getUint16(this.pos, this.le); this.pos += 2; return v; }
-  i16() { const v = this.view.getInt16(this.pos, this.le);  this.pos += 2; return v; }
-  i32() { const v = this.view.getInt32(this.pos, this.le);  this.pos += 4; return v; }
-  i64() { const v = this.view.getBigInt64(this.pos, this.le); this.pos += 8; return v; }
-  f32() { const v = this.view.getFloat32(this.pos, this.le); this.pos += 4; return v; }
-  f64() { const v = this.view.getFloat64(this.pos, this.le); this.pos += 8; return v; }
-  str(len) {
-    const s = new TextDecoder('utf-8').decode(this.bytes.subarray(this.pos, this.pos + len));
-    this.pos += len;
-    return s;
-  }
-  readName() { return this.str(this.u16()); }
-  readPayload(type) {
-    switch (type) {
-      case 1: return this.i8();
-      case 2: return this.i16();
-      case 3: return this.i32();
-      case 4: return this.i64();
-      case 5: return this.f32();
-      case 6: return this.f64();
-      case 7: {
-        const len = this.i32();
-        if (len < 0) throw new Error('Negative byte array length: ' + len);
-        const arr = new Int8Array(len);
-        for (let i = 0; i < len; i++) arr[i] = this.i8();
-        return arr;
-      }
-      case 8: return this.str(this.u16());
-      case 9: {
-        const elemType = this.u8();
-        const len = this.i32();
-        if (len < 0) throw new Error('Negative list length: ' + len);
-        const arr = new Array(len);
-        for (let i = 0; i < len; i++) arr[i] = this.readPayload(elemType);
-        arr._nbtType = elemType;
-        return arr;
-      }
-      case 10: {
-        const obj = {};
-        while (true) {
-          const t = this.u8();
-          if (t === 0) break;
-          const name = this.readName();
-          obj[name] = this.readPayload(t);
+    <div class="list-container">
+        <div class="list-title">◆ SELECT AN ITEM ◆</div>
+        <div id="chestContainer">
+            <div class="empty-state">
+                Click <span style="color:var(--pink)">OPEN</span> to load a .mcstructure file<br />
+                or drag and drop a file onto the page.<br /><br />
+                <span style="color: var(--yellow); font-size: 18px;">NOTE:</span><br />
+                The structure file must contain a chest<br />
+                with the items you want to edit inside it.
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- DETAIL SCREEN -->
+<div class="screen" id="detailScreen">
+    <div class="toolbar">
+        <button class="back-btn" id="btnBack">< BACK</button>
+        <div class="status" id="detailStatus">EDITING ITEM</div>
+    </div>
+
+    <div class="detail-container">
+        <div class="card">
+            <h3>◆ IN-GAME PREVIEW</h3>
+            <div class="preview-box" id="previewBox"></div>
+        </div>
+
+        <div class="card">
+            <h3>◆ SELECTED ITEM</h3>
+            <div class="selected-header">
+                <div class="detail-icon-wrap" id="detailIconWrap">
+                    <img id="detailIcon" src="" alt="" />
+                </div>
+                <div>
+                    <div class="name" id="detailName">minecraft:item</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>◆ RENAME</h3>
+            <textarea id="nameInput" placeholder="Custom name..." rows="1"></textarea>
+            <div class="hint" id="colorHint"></div>
+        </div>
+
+        <div class="card">
+            <h3>◆ LORE</h3>
+            <textarea id="loreInput"></textarea>
+        </div>
+
+        <div class="card">
+            <h3>◆ FLAGS</h3>
+            <div class="flags">
+                <label class="flag">
+                    <input type="checkbox" id="keepCheck" />
+                    <span>Keep on Death</span>
+                </label>
+                <label class="flag">
+                    <input type="checkbox" id="glintCheck" />
+                    <span>Foil / Glint</span>
+                </label>
+                <label class="flag">
+                    <input type="checkbox" id="shortDamageCheck" />
+                    <span>Data</span>
+                </label>
+                <div id="shortDamageInputWrap" style="display:none; padding: 0 9px 14px 9px;">
+                    <input type="text" id="shortDamageInput" inputmode="numeric" placeholder="6767" />
+                    <div class="hint">Detectable by ...@s[hasitem={data=... DOES NOT WORK WITH ARMOR/TOOLS that have a durability property.</div>
+                </div>
+                <label class="flag" id="unbreakableFlag" style="display:none">
+                    <input type="checkbox" id="unbreakableCheck" />
+                    <span>Unbreakable</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Actions buttons removed per user request -->
+    </div>
+</div>
+
+<input type="file" id="fileInput" accept=".mcstructure" hidden />
+
+<script type="importmap">
+    {
+        "imports": {
+            "nbtify": "https://cdn.jsdelivr.net/npm/nbtify@2.1.0/+esm"
+        }
+    }
+</script>
+
+<script type="module">
+    import * as NBT from 'nbtify';
+
+    // ========== STATE ==========
+    let nbtRoot = null;
+    let fileName = 'edited.mcstructure';
+    let chests = [];
+    let allItems = [];
+    let currentIndex = -1;
+    // Paths of items the user has edited this session (survives refresh/re-extract)
+    const editedPaths = new Set();
+
+    // ========== DOM HELPERS ==========
+    const $ = id => document.getElementById(id);
+    const chestContainer = $('chestContainer');
+    const statusEl = $('status');
+    const glowOverlay = $('glowOverlay');
+    const loadingOverlay = $('loadingOverlay');
+    const tooltipEl = document.createElement('div');
+    tooltipEl.className = 'tooltip';
+    document.body.appendChild(tooltipEl);
+
+    // ========== BACKGROUND PARTICLES ==========
+    const canvas = $('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    let w, h, particles = [];
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789§';
+    const colors = ['#00f7ff', '#ff00aa', '#bf00ff', '#00ff9d', '#ffee00'];
+
+    function resize() {
+        w = canvas.width = innerWidth;
+        h = canvas.height = innerHeight;
+    }
+    addEventListener('resize', resize);
+    resize();
+
+    class Particle {
+        constructor() { this.reset(true); }
+        reset(init = false) {
+            this.x = Math.random() * w;
+            this.y = init ? Math.random() * h : h + 40;
+            this.z = Math.random() * 1.3 + 0.5;
+            this.speed = (0.22 + Math.random() * 0.45) * this.z;
+            this.char = chars[Math.floor(Math.random() * chars.length)];
+            this.color = colors[Math.floor(Math.random() * colors.length)];
+            this.baseAlpha = 0.035 + Math.random() * 0.08;
+            this.size = (9 + Math.random() * 10) * this.z;
+            this.rot = Math.random() * Math.PI * 2;
+            this.rotSpeed = (Math.random() - 0.5) * 0.012;
+            this.pulse = Math.random() * Math.PI * 2;
+        }
+        update() {
+            this.y -= this.speed;
+            this.rot += this.rotSpeed;
+            this.pulse += 0.025;
+            if (this.y < -50) this.reset();
+        }
+        draw() {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.rot);
+            ctx.font = `${this.size}px "Press Start 2P"`;
+            ctx.fillStyle = this.color;
+            ctx.globalAlpha = Math.max(0, this.baseAlpha + Math.sin(this.pulse) * 0.03);
+            ctx.shadowBlur = 4;
+            ctx.shadowColor = this.color;
+            ctx.fillText(this.char, 0, 0);
+            ctx.restore();
+        }
+    }
+
+    for (let i = 0; i < 48; i++) particles.push(new Particle());
+
+    (function loop() {
+        ctx.clearRect(0, 0, w, h);
+        const g = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w * 0.7);
+        g.addColorStop(0, 'rgba(18, 8, 36, 0.14)');
+        g.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, w, h);
+        particles.forEach(p => { p.update();
+            p.draw(); });
+        requestAnimationFrame(loop);
+    })();
+
+    // ========== § COLOR PARSER ==========
+    const MC_COLORS = {
+        '0': '#000000',
+        '1': '#0000AA',
+        '2': '#00AA00',
+        '3': '#00BCBC',
+        '4': '#AA0000',
+        '5': '#AA00AA',
+        '6': '#FFAA00',
+        '7': '#AAAAAA',
+        '8': '#555555',
+        '9': '#5555FF',
+        a: '#55FF55',
+        b: '#55FFFF',
+        c: '#FF5555',
+        d: '#FF55FF',
+        e: '#FFFF55',
+        f: '#FFFFFF',
+        // ---- Bedrock-exclusive color codes ----
+        g: '#DDD605', // Minecoin Gold
+        h: '#E0D6BF', // Material: Quartz
+        i: '#B2BEC2', // Material: Iron
+        j: '#443A3B', // Material: Netherite
+        m: '#971607', // Material: Redstone
+        n: '#D57C5F', // Material: Copper
+        p: '#DEB12D', // Material: Gold
+        q: '#47A036', // Material: Emerald
+        s: '#52F1FE', // Material: Diamond
+        t: '#5083FF', // Material: Lapis Lazuli
+        u: '#9A5CC6', // Material: Amethyst
+        v: '#FE7F00'  // Material: Resin
+    };
+
+    // Build the § color hint under RENAME from MC_COLORS so it stays in sync
+    (function buildColorHint() {
+        const el = document.getElementById('colorHint');
+        if (!el) return;
+
+        const vanilla = ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f',];
+        const bedrock = ['g','h','i','j','m','n','p','q','s','t','u','v'];
+
+        const swatch = (code, label) => {
+            const hex = MC_COLORS[code] || '#ffffff';
+            return `<span style="color:${hex};font-weight:normal;text-shadow:none;font-size:15px;">${label || '§' + code}</span>`;
+        };
+
+        el.innerHTML =
+            vanilla.map(c => swatch(c)).join(' ') +
+            ' ' +
+            bedrock.map(c => swatch(c)).join(' ') +
+            ' ' +
+            swatch('r', '§r');
+    })();
+
+    function parseMC(text) {
+        if (!text) return '';
+        let html = '';
+        let i = 0;
+        let color = '#FFFFFF';
+        let bold = false,
+            italic = false;
+
+        while (i < text.length) {
+            if (text[i] === '§' && i + 1 < text.length) {
+                const code = text[i + 1].toLowerCase();
+
+                // §x§R§R§G§G§B§B — true-colour hex (Bedrock 1.16+)
+                if (code === 'x') {
+                    let hex = '';
+                    let j = i + 2;
+                    for (let n = 0; n < 6; n++) {
+                        if (text[j] === '§' && j + 1 < text.length && /[0-9a-f]/i.test(text[j + 1])) {
+                            hex += text[j + 1];
+                            j += 2;
+                        } else break;
+                    }
+                    if (hex.length === 6) { color = '#' + hex; i = j; }
+                    else i += 2;
+                    continue;
+                }
+
+                i += 2;
+                if (MC_COLORS[code]) color = MC_COLORS[code];
+                else if (code === 'l') bold = true;
+                else if (code === 'o') italic = true;
+                else if (code === 'r') { color = '#FFFFFF';
+                    bold = italic = false; }
+                continue;
+            }
+            // Convert \n to <br> to guarantee line breaks
+            if (text[i] === '\n') {
+                html += `<br>`;
+                i++;
+                continue;
+            }
+            const ch = text[i].replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            let style = `color:${color};font-weight:${bold ? 'bold' : 'normal'}`;
+            if (italic) style += ';font-style:italic';
+            html += `<span style="${style}">${ch}</span>`;
+            i++;
+        }
+        return html;
+    }
+
+    function getFirstColorFromName(name) {
+        if (!name) return 'f';
+        let colorCode = 'f';
+        let lastWasReset = false;
+        let foundColor = false;
+
+        for (let i = 0; i < name.length; i++) {
+            if (name[i] === '§' && i + 1 < name.length) {
+                const code = name[i + 1].toLowerCase();
+
+                // §x§R§R§G§G§B§B — true-colour hex
+                if (code === 'x') {
+                    let hex = '';
+                    let j = i + 2;
+                    for (let n = 0; n < 6; n++) {
+                        if (name[j] === '§' && j + 1 < name.length && /[0-9a-f]/i.test(name[j + 1])) {
+                            hex += name[j + 1];
+                            j += 2;
+                        } else break;
+                    }
+                    if (hex.length === 6) {
+                        if (lastWasReset || !foundColor) {
+                            colorCode = '#' + hex;
+                            foundColor = true;
+                            lastWasReset = false;
+                        }
+                        i = j - 1;
+                    }
+                    continue;
+                }
+
+                if (code === 'r') {
+                    lastWasReset = true;
+                } else if (MC_COLORS[code]) {
+                    if (lastWasReset || !foundColor) {
+                        colorCode = code;
+                        foundColor = true;
+                        lastWasReset = false;
+                    }
+                }
+                i++;
+            }
+        }
+        return colorCode;
+    }
+
+    function hasColorCode(str) {
+        return /§([0-9a-gijmnpqstuv]|x)/i.test(str || '');
+    }
+
+    // ========== TOOL / ARMOR DETECTION ==========
+    // Only tools and armor get the Unbreakable flag exposed in the UI.
+    function isToolOrArmor(itemName) {
+        const raw = String(itemName || '').replace(/^minecraft:/i, '').toLowerCase().trim();
+        if (!raw) return false;
+
+        const suffixes = [
+            '_pickaxe', '_axe', '_shovel', '_hoe', '_sword',
+            '_helmet', '_chestplate', '_leggings', '_boots'
+        ];
+        for (const s of suffixes) {
+            if (raw.endsWith(s)) return true;
+        }
+
+        const exact = new Set([
+            'shears', 'flint_and_steel', 'fishing_rod', 'carrot_on_a_stick',
+            'warped_fungus_on_a_stick', 'shield', 'elytra', 'bow', 'crossbow',
+            'trident', 'brush', 'mace',
+            'leather_horse_armor', 'iron_horse_armor', 'golden_horse_armor',
+            'diamond_horse_armor', 'netherite_horse_armor',
+            'turtle_helmet'
+        ]);
+        return exact.has(raw);
+    }
+
+    function updatePreview() {
+        // Raw item id (e.g. minecraft:anvil) when no custom name is set
+        const rawItemName = (currentIndex >= 0 && allItems[currentIndex])
+            ? allItems[currentIndex].name
+            : 'minecraft:item';
+
+        let name = ($('nameInput').value || '').trim();
+        if (!name) {
+            name = rawItemName; // show minecraft:(name) when empty
+        }
+
+        // ---- NAME ----
+        // If the user typed any § color → use normal parseMC
+        // Otherwise apply pure CSS defaults (italic + color)
+        let nameHtml;
+        if (hasColorCode(name)) {
+            nameHtml = parseMC(name);
+        } else {
+            const isGlint = $('glintCheck') && $('glintCheck').checked;
+            const color = isGlint ? '#55FFFF' : '#FFFFFF'; // §b or white
+            nameHtml = `<span style="color:${color};font-style:italic">${name
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</span>`;
+        }
+
+        // ---- LORE + KEEP ----
+        // Build the full body so Minecraft color/style state carries across lines
+        let lore = $('loreInput').value || '';
+        let body = lore;
+        if ($('keepCheck') && $('keepCheck').checked) {
+            if (body) body += '\n';
+            body += 'This item is not lost on death';
+        }
+
+        let loreHtml = '';
+        if (body) {
+            if (hasColorCode(body)) {
+                // At least one § color exists → let the real Minecraft parser
+                // handle everything (colors carry until a new § changes them)
+                loreHtml = parseMC(body);
+            } else {
+                // Completely plain text → apply italic dark-pink default
+                const safe = body
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/\n/g, '<br>');
+                loreHtml = `<span style="color:#AA00AA;font-style:italic">${safe}</span>`;
+            }
+        }
+
+        let html = `<div class="name">${nameHtml}</div>`;
+        if (loreHtml) {
+            html += `<div class="lore">${loreHtml}</div>`;
+        }
+
+        $('previewBox').innerHTML = html;
+    }
+
+    $('nameInput').addEventListener('input', updatePreview);
+
+    // Auto-resize Rename input to 1 line, expanding on paragraphs
+    const renameInput = $('nameInput');
+    const autoResize = (el) => {
+        el.style.height = 'auto';
+        el.style.height = el.scrollHeight + 'px';
+    };
+    renameInput.addEventListener('input', () => {
+        autoResize(renameInput);
+    });
+    autoResize(renameInput);
+    $('loreInput').addEventListener('input', updatePreview);
+
+    // ========== ITEM ICONS ==========
+    function setItemIcon(imgElement, itemName) {
+        imgElement.style.background = '';
+        imgElement.style.opacity = '1';
+        imgElement.onerror = null;
+        imgElement.onload = null;
+        imgElement.referrerPolicy = 'no-referrer';
+        imgElement.removeAttribute('src');
+
+        let raw = String(itemName || '').replace(/^minecraft:/i, '').toLowerCase().trim();
+        if (!raw) {
+            imgElement.style.background = '#333';
+            imgElement.style.opacity = '0.6';
+            return;
+        }
+
+        // Java / display-name aliases (item IDs)
+        const idAliases = {
+            'wooden_door': 'oak_door',
+            'wooden_button': 'oak_button',
+            'wooden_pressure_plate': 'oak_pressure_plate',
+            'wooden_trapdoor': 'oak_trapdoor',
+            'wooden_fence': 'oak_fence',
+            'wooden_fence_gate': 'oak_fence_gate',
+            'wooden_slab': 'oak_slab',
+            'wooden_stairs': 'oak_stairs',
+            'wooden_planks': 'oak_planks',
+            'wooden_sign': 'oak_sign',
+            'sign': 'oak_sign',
+            'boat': 'oak_boat',
+            'chest_boat': 'oak_chest_boat',
+            'grass': 'grass_block',
+            'tallgrass': 'short_grass',
+            'double_plant': 'sunflower',
+            'waterlily': 'lily_pad',
+            'reeds': 'sugar_cane',
+            'fish': 'cod',
+            'cooked_fish': 'cooked_cod',
+            'clownfish': 'tropical_fish',
+            'puffer_fish': 'pufferfish',
+            'melon_block': 'melon',
+            'speckled_melon': 'glistering_melon_slice',
+            'netherbrick': 'nether_brick',
+            'nether_brick_item': 'nether_brick',
+            'fireball': 'fire_charge',
+            'fireworks': 'firework_rocket',
+            'firework': 'firework_rocket',
+            'record_13': 'music_disc_13',
+            'record_cat': 'music_disc_cat',
+            'record_blocks': 'music_disc_blocks',
+            'record_chirp': 'music_disc_chirp',
+            'record_far': 'music_disc_far',
+            'record_mall': 'music_disc_mall',
+            'record_mellohi': 'music_disc_mellohi',
+            'record_stal': 'music_disc_stal',
+            'record_strad': 'music_disc_strad',
+            'record_ward': 'music_disc_ward',
+            'record_11': 'music_disc_11',
+            'record_wait': 'music_disc_wait',
+            'empty_map': 'map',
+            'book_and_quill': 'writable_book',
+            'redstone_dust': 'redstone',
+            'bed': 'red_bed',
+            'skull': 'skeleton_skull',
+            'banner': 'white_banner',
+            'concrete': 'white_concrete',
+            'concrete_powder': 'white_concrete_powder',
+            'stained_glass': 'white_stained_glass',
+            'stained_glass_pane': 'white_stained_glass_pane',
+            'carpet': 'white_carpet',
+            'wool': 'white_wool',
+            'undyed_shulker_box': 'shulker_box',
+            'spawn_egg': 'pig_spawn_egg',
+            'monster_egg': 'infested_stone',
+            'light_block': 'light',
+            'frame': 'item_frame',
+            'glow_frame': 'glow_item_frame',
+            'froglight': 'ochre_froglight',
+            'medicine': 'glass_bottle',
+        };
+
+        // Extra texture filenames that differ from the item id
+        // (Java latest removed some item/*.png files; Bedrock uses different names)
+        const fileAliases = {
+            'bed': ['red_bed', 'bed_red', 'white_bed', 'bed_white'],
+            'red_bed': ['bed_red'],
+            'crossbow': ['crossbow_standby', 'crossbow_arrow'],
+            'wooden_door': ['oak_door', 'door_wood'],
+            'oak_door': ['door_wood'],
+            'enchanted_book': ['book_enchanted'],
+            'writable_book': ['book_writable'],
+            'written_book': ['book_written'],
+            'firework_star': ['fireworks_charge'],
+            'golden_helmet': ['gold_helmet'],
+            'golden_chestplate': ['gold_chestplate'],
+            'golden_leggings': ['gold_leggings'],
+            'golden_boots': ['gold_boots'],
+            'golden_sword': ['gold_sword'],
+            'golden_pickaxe': ['gold_pickaxe'],
+            'golden_axe': ['gold_axe'],
+            'golden_shovel': ['gold_shovel'],
+            'golden_hoe': ['gold_hoe'],
+            'golden_apple': ['apple_golden'],
+        };
+
+        const javaId = idAliases[raw] || raw;
+        const extra = fileAliases[raw] || fileAliases[javaId] || [];
+        const ids = [...new Set([raw, javaId, ...extra])];
+
+        function titleCase(id) {
+            return id.split('_').filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('_');
+        }
+
+        const JAVA = 'https://cdn.jsdelivr.net/gh/misode/mcmeta@assets/assets/minecraft/textures';
+        const JAVA_RAW = 'https://raw.githubusercontent.com/misode/mcmeta/assets/assets/minecraft/textures';
+        const BE = 'https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures';
+        const WIKI = 'https://minecraft.wiki/w/Special:FilePath';
+
+        const sources = [];
+        const seen = new Set();
+        const add = (url) => {
+            if (!url || seen.has(url)) return;
+            seen.add(url);
+            sources.push(url);
+        };
+
+        // 1) Minecraft Wiki inventory icons (true inv-sprites). img src does not need CORS.
+        //    This is what actually exists for bed / crossbow / shield.
+        for (const id of ids) {
+            add(`${WIKI}/Invicon_${titleCase(id)}.png`);
+        }
+
+        // 2) Java item textures (jsDelivr then raw)
+        for (const id of ids) {
+            add(`${JAVA}/item/${id}.png`);
+        }
+
+        // 3) Official Bedrock item textures
+        for (const id of ids) {
+            add(`${BE}/items/${id}.png`);
+        }
+
+        // 4) Items that live as entity / block textures
+        if (ids.includes('shield') || raw === 'shield') {
+            add(`${JAVA}/entity/shield/shield_base.png`);
+            add(`${JAVA_RAW}/entity/shield/shield_base.png`);
+            add(`${BE}/entity/shield.png`);
+        }
+        if (raw === 'bed' || ids.includes('red_bed') || ids.includes('bed_red')) {
+            add(`${JAVA}/block/red_bed_top.png`);
+            add(`${BE}/blocks/bed_red_top.png`);
+            add(`${BE}/blocks/bed_red.png`);
+        }
+
+        // 5) Block textures as last resort
+        for (const id of ids) {
+            add(`${JAVA}/block/${id}.png`);
+            add(`${JAVA}/block/${id}_front.png`);
+            add(`${JAVA}/block/${id}_side.png`);
+            add(`${JAVA}/block/${id}_top.png`);
+            add(`${BE}/blocks/${id}.png`);
+            add(`${BE}/blocks/${id}_front.png`);
+            add(`${BE}/blocks/${id}_top.png`);
+        }
+
+        let attempt = 0;
+        function tryNext() {
+            if (attempt >= sources.length) {
+                imgElement.style.background = '#2a2a3a';
+                imgElement.style.opacity = '0.55';
+                imgElement.removeAttribute('src');
+                imgElement.onerror = null;
+                return;
+            }
+            imgElement.src = sources[attempt++];
+        }
+
+        imgElement.onerror = tryNext;
+        imgElement.onload = () => {
+            imgElement.style.opacity = '1';
+            imgElement.style.background = '';
+            imgElement.onerror = null;
+        };
+
+        tryNext();
+    }
+
+    // ========== EXTRACT CHESTS & ITEMS (FIXED) ==========
+    function extractChests(root) {
+        const chestMap = new Map();
+        const allItems = [];
+
+        function unwrap(obj) {
+            if (obj && typeof obj === 'object' && 'value' in obj && ('type' in obj || Object.keys(obj).length <= 3)) {
+                return obj.value;
+            }
+            return obj;
+        }
+
+        function getContainerKey(path) {
+            if (!path) return 'root';
+            const parts = path.split('.');
+            if (parts[parts.length - 1] === 'Items') {
+                parts.pop();
+            }
+            return parts.join('.') || 'root';
+        }
+
+        function processItem(rawItem, path, containerKey, idx) {
+            const item = unwrap(rawItem);
+            if (!item || typeof item !== 'object') return;
+
+            const nameVal = item.Name ?? item.name;
+            if (nameVal === undefined) return;
+
+            const name = unwrap(nameVal) ?? 'unknown';
+            const count = unwrap(item.Count ?? item.count) ?? 1;
+            const slot = unwrap(item.Slot ?? item.slot) ?? idx;
+
+            let displayName = '';
+            const tag = unwrap(item.tag ?? item.Tag);
+            if (tag) {
+                const display = unwrap(tag.display);
+                if (display) {
+                    displayName = unwrap(display.Name) ?? '';
+                }
+            }
+
+            const itemPath = path ? `${path}[${idx}]` : `Items[${idx}]`;
+            const itemEntry = {
+                ref: item,
+                name: String(name),
+                count: Number(count),
+                displayName: String(displayName),
+                slot: Number(slot),
+                path: itemPath,
+                chestKey: containerKey,
+                edited: editedPaths.has(itemPath)
+            };
+
+            if (!chestMap.has(containerKey)) {
+                chestMap.set(containerKey, {
+                    key: containerKey,
+                    name: `Chest ${chestMap.size + 1}`,
+                    items: []
+                });
+            }
+            chestMap.get(containerKey).items.push(itemEntry);
+            allItems.push(itemEntry);
+        }
+
+        // --- FIXED: only look for block_entity_data → Items, skip block_palette ---
+        function findBlockEntityData(obj, path = '') {
+            if (!obj || typeof obj !== 'object') return;
+            const data = unwrap(obj);
+
+            for (const [key, value] of Object.entries(data)) {
+                const newPath = path ? `${path}.${key}` : key;
+
+                if (key === 'block_entity_data') {
+                    const bed = unwrap(value);
+                    if (bed && bed.Items && Array.isArray(bed.Items)) {
+                        const containerKey = getContainerKey(newPath + '.Items');
+                        bed.Items.forEach((rawItem, idx) => {
+                            processItem(rawItem, newPath + '.Items', containerKey, idx);
+                        });
+                    }
+                    // do NOT recurse into block_entity_data — we already processed its Items
+                } else if (key === 'block_palette') {
+                    // skip block_palette entirely — it never contains chest contents
+                    continue;
+                } else {
+                    findBlockEntityData(value, newPath);
+                }
+            }
+        }
+
+        findBlockEntityData(root);
+        return { chests: Array.from(chestMap.values()), allItems };
+    }
+
+    // ========== TOOLTIP (always shows at least the name) ==========
+    // Enchantment display feature completely removed.
+
+    function unwrap(obj) {
+        if (obj && typeof obj === 'object' && 'value' in obj && ('type' in obj || Object.keys(obj).length <= 3)) {
+            return obj.value;
         }
         return obj;
-      }
-      case 11: {
-        const len = this.i32();
-        if (len < 0) throw new Error('Negative int array length: ' + len);
-        const arr = new Int32Array(len);
-        for (let i = 0; i < len; i++) arr[i] = this.i32();
-        return arr;
-      }
-      case 12: {
-        const len = this.i32();
-        if (len < 0) throw new Error('Negative long array length: ' + len);
-        const arr = new Array(len);
-        for (let i = 0; i < len; i++) arr[i] = this.i64();
-        return arr;
-      }
-      default:
-        throw new Error('Unknown NBT tag type: ' + type + ' at offset ' + (this.pos - 1));
     }
-  }
-  readRoot() {
-    const type = this.u8();
-    if (type === 0) return null;
-    const name = this.readName();
-    const value = this.readPayload(type);
-    return { type, name, value };
-  }
-}
 
-// ========== NBT writer (little-endian) ==========
-class NBTWriter {
-  constructor(le = true) { this.le = le; this.chunks = []; }
-  push(u8) { this.chunks.push(u8); }
-  u8(v)  { this.push(new Uint8Array([v & 0xFF])); }
-  i8(v)  { this.push(new Uint8Array([v & 0xFF])); }
-  u16(v) { const b = new Uint8Array(2); new DataView(b.buffer).setUint16(0, v, this.le); this.push(b); }
-  i16(v) { const b = new Uint8Array(2); new DataView(b.buffer).setInt16(0, v, this.le); this.push(b); }
-  i32(v) { const b = new Uint8Array(4); new DataView(b.buffer).setInt32(0, v, this.le); this.push(b); }
-  i64(v) { const b = new Uint8Array(8); new DataView(b.buffer).setBigInt64(0, BigInt(v), this.le); this.push(b); }
-  f32(v) { const b = new Uint8Array(4); new DataView(b.buffer).setFloat32(0, v, this.le); this.push(b); }
-  f64(v) { const b = new Uint8Array(8); new DataView(b.buffer).setFloat64(0, v, this.le); this.push(b); }
-  str(s) {
-    const enc = new TextEncoder().encode(s);
-    this.u16(enc.length);
-    this.push(enc);
-  }
-  finish() {
-    const total = this.chunks.reduce((s, c) => s + c.length, 0);
-    const out = new Uint8Array(total);
-    let off = 0;
-    for (const c of this.chunks) { out.set(c, off); off += c.length; }
-    return out;
-  }
-}
-
-// ========== SNBT parser ==========
-function parseSNBT(text) {
-  let pos = 0;
-  const len = text.length;
-
-  function skipWs() {
-    while (pos < len) {
-      const c = text[pos];
-      if (c === ' ' || c === '\t' || c === '\n' || c === '\r') { pos++; continue; }
-      // Comments: // to end of line
-      if (c === '/' && text[pos + 1] === '/') {
-        while (pos < len && text[pos] !== '\n') pos++;
-        continue;
-      }
-      break;
+    /** True if the item currently has enchantment glint / foil */
+    function itemHasGlint(item) {
+        if (!item || !item.ref) return false;
+        const tag = item.ref.tag?.value || item.ref.tag;
+        if (!tag) return false;
+        if (tag.ench !== undefined && tag.ench !== null) return true;
+        // Bedrock / component-style foil flag if present
+        if (tag['minecraft:enchantment_glint_override'] !== undefined) return true;
+        if (tag.Foil === true || tag.foil === true) return true;
+        return false;
     }
-  }
 
-  function error(msg) {
-    const snippet = text.slice(Math.max(0, pos - 30), pos + 30).replace(/\n/g, '\\n');
-    throw new Error(`SNBT parse error at position ${pos}: ${msg} — near "${snippet}"`);
-  }
-
-  function parseValue() {
-    skipWs();
-    if (pos >= len) error('unexpected end of input');
-    const c = text[pos];
-    if (c === '{') return parseCompound();
-    if (c === '[') return parseListOrArray();
-    if (c === '"' || c === "'") return parseString();
-    if (c === '-' || c === '+' || (c >= '0' && c <= '9') || c === '.') return parseNumber();
-    // Unquoted identifier (true/false/null or bare string)
-    if (/[a-zA-Z_]/.test(c)) {
-      let start = pos;
-      while (pos < len && /[a-zA-Z0-9_\-+.:]/.test(text[pos])) pos++;
-      const s = text.slice(start, pos);
-      if (s === 'true') return { type: 'byte', value: 1 };
-      if (s === 'false') return { type: 'byte', value: 0 };
-      if (s === 'null') return null;
-      return { type: 'string', value: s };
-    }
-    error(`unexpected character '${c}'`);
-  }
-
-  function parseString() {
-    const quote = text[pos];
-    pos++;
-    let s = '';
-    while (pos < len) {
-      const c = text[pos];
-      if (c === '\\') {
-        const next = text[pos + 1];
-        if (next === 'n') s += '\n';
-        else if (next === 't') s += '\t';
-        else if (next === 'r') s += '\r';
-        else if (next === '\\') s += '\\';
-        else if (next === '"') s += '"';
-        else if (next === "'") s += "'";
-        else s += next;
-        pos += 2;
-      } else if (c === quote) {
-        pos++;
-        return { type: 'string', value: s };
-      } else {
-        s += c;
-        pos++;
-      }
-    }
-    error('unterminated string');
-  }
-
-  function parseNumber() {
-    const start = pos;
-    if (text[pos] === '-' || text[pos] === '+') pos++;
-    while (pos < len && /[0-9]/.test(text[pos])) pos++;
-    let isFloat = false;
-    if (text[pos] === '.') {
-      isFloat = true; pos++;
-      while (pos < len && /[0-9]/.test(text[pos])) pos++;
-    }
-    if (text[pos] === 'e' || text[pos] === 'E') {
-      isFloat = true; pos++;
-      if (text[pos] === '+' || text[pos] === '-') pos++;
-      while (pos < len && /[0-9]/.test(text[pos])) pos++;
-    }
-    let suffix = '';
-    if (pos < len && /[bsLfd]/.test(text[pos])) { suffix = text[pos]; pos++; }
-    const numStr = text.slice(start, suffix ? pos - 1 : pos);
-    let value;
-    let type = 'int';
-    if (suffix === 'b') type = 'byte';
-    else if (suffix === 's') type = 'short';
-    else if (suffix === 'L') type = 'long';
-    else if (suffix === 'f') type = 'float';
-    else if (suffix === 'd') type = 'double';
-    else if (isFloat) type = 'double';
-    if (type === 'long') {
-      try { value = BigInt(numStr); } catch { value = Number(numStr); }
-    } else {
-      value = isFloat ? parseFloat(numStr) : parseInt(numStr, 10);
-    }
-    return { type, value };
-  }
-
-  function parseCompound() {
-    pos++; // {
-    const obj = {};
-    skipWs();
-    if (text[pos] === '}') { pos++; return { type: 'compound', value: obj }; }
-    while (true) {
-      skipWs();
-      let key;
-      if (text[pos] === '"' || text[pos] === "'") {
-        key = parseString().value;
-      } else {
-        const start = pos;
-        while (pos < len && /[a-zA-Z0-9_\-+.]/.test(text[pos])) pos++;
-        if (pos === start) error('expected key');
-        key = text.slice(start, pos);
-      }
-      skipWs();
-      if (text[pos] !== ':') error(`expected ':' but got '${text[pos]}'`);
-      pos++;
-      const val = parseValue();
-      obj[key] = val;
-      skipWs();
-      if (text[pos] === ',') { pos++; continue; }
-      if (text[pos] === '}') { pos++; return { type: 'compound', value: obj }; }
-      error(`expected ',' or '}' but got '${text[pos]}'`);
-    }
-  }
-
-  function parseListOrArray() {
-    pos++; // [
-    skipWs();
-    if (text[pos] === 'B' && text[pos + 1] === ';') {
-      pos += 2;
-      return parseTypedArray('byte');
-    }
-    if (text[pos] === 'I' && text[pos + 1] === ';') {
-      pos += 2;
-      return parseTypedArray('int');
-    }
-    if (text[pos] === 'L' && text[pos + 1] === ';') {
-      pos += 2;
-      return parseTypedArray('long');
-    }
-    const items = [];
-    skipWs();
-    if (text[pos] === ']') { pos++; return { type: 'list', value: items }; }
-    while (true) {
-      items.push(parseValue());
-      skipWs();
-      if (text[pos] === ',') { pos++; skipWs(); if (text[pos] === ']') { pos++; return { type: 'list', value: items }; } continue; }
-      if (text[pos] === ']') { pos++; return { type: 'list', value: items }; }
-      error(`expected ',' or ']' but got '${text[pos]}'`);
-    }
-  }
-
-  function parseTypedArray(elemType) {
-    const items = [];
-    skipWs();
-    if (text[pos] === ']') { pos++; return { type: elemType + 'Array', value: items }; }
-    while (true) {
-      const v = parseNumber();
-      items.push({ type: elemType, value: v.value });
-      skipWs();
-      if (text[pos] === ',') { pos++; skipWs(); if (text[pos] === ']') { pos++; return { type: elemType + 'Array', value: items }; } continue; }
-      if (text[pos] === ']') { pos++; return { type: elemType + 'Array', value: items }; }
-      error(`expected ',' or ']' but got '${text[pos]}'`);
-    }
-  }
-
-  const result = parseValue();
-  skipWs();
-  if (pos < len) error('unexpected trailing content');
-  return result;
-}
-
-// ========== NBT serializer from parsed SNBT tree ==========
-const TYPE_ID = {
-  byte: 1, short: 2, int: 3, long: 4, float: 5, double: 6,
-  byteArray: 7, string: 8, list: 9, compound: 10, intArray: 11, longArray: 12
-};
-
-function serializeNBTNode(node) {
-  if (!node || node.type !== 'compound') {
-    throw new Error('serializeNBTNode: root must be a compound, got ' + (node && node.type));
-  }
-  const w = new NBTWriter(true);
-  w.u8(10); w.u16(0); // root compound, empty name
-  for (const [k, v] of Object.entries(node.value)) {
-    writeTag(w, k, v);
-  }
-  w.u8(0); // end root
-  return w.finish();
-}
-
-function writeTag(w, name, node) {
-  if (node == null) throw new Error(`Null value for key "${name}"`);
-  const tid = TYPE_ID[node.type];
-  if (!tid) throw new Error(`Unknown type "${node.type}" for key "${name}"`);
-  w.u8(tid);
-  w.str(name);
-  writeTagValue(w, node);
-}
-
-function writeTagValue(w, node) {
-  switch (node.type) {
-    case 'byte': w.i8(node.value); break;
-    case 'short': w.i16(node.value); break;
-    case 'int': w.i32(node.value); break;
-    case 'long': w.i64(node.value); break;
-    case 'float': w.f32(node.value); break;
-    case 'double': w.f64(node.value); break;
-    case 'string': w.str(node.value); break;
-    case 'byteArray':
-      w.i32(node.value.length);
-      for (const v of node.value) w.i8(v.value);
-      break;
-    case 'intArray':
-      w.i32(node.value.length);
-      for (const v of node.value) w.i32(v.value);
-      break;
-    case 'longArray':
-      w.i32(node.value.length);
-      for (const v of node.value) w.i64(v.value);
-      break;
-    case 'list': {
-      if (node.value.length === 0) {
-        w.u8(0);
-        w.i32(0);
-      } else {
-        let expectedType = node.value[0].type;
-        if (['byte', 'short', 'int', 'long', 'float', 'double'].includes(expectedType)) {
-          let type = expectedType;
-          for (const v of node.value) {
-            if (v.type === 'double') type = 'double';
-            else if (v.type === 'float' && type !== 'double') type = 'float';
-            else if (v.type === 'long' && type !== 'double' && type !== 'float') type = 'long';
-            else if (v.type === 'int' && type !== 'double' && type !== 'float' && type !== 'long') type = 'int';
-            else if (v.type === 'short' && type !== 'double' && type !== 'float' && type !== 'long' && type !== 'int') type = 'short';
-          }
-          w.u8(TYPE_ID[type]);
-          w.i32(node.value.length);
-          for (const v of node.value) {
-            if (type === 'double') w.f64(Number(v.value));
-            else if (type === 'float') w.f32(Number(v.value));
-            else if (type === 'long') w.i64(v.value);
-            else if (type === 'int') w.i32(Number(v.value));
-            else if (type === 'short') w.i16(Number(v.value));
-            else if (type === 'byte') w.i8(Number(v.value));
-          }
-        } else {
-          w.u8(TYPE_ID[expectedType]);
-          w.i32(node.value.length);
-          for (const v of node.value) writeTagValue(w, v);
+    function showTooltip(e, item) {
+        if (!item) {
+            tooltipEl.style.display = 'none';
+            return;
         }
-      }
-      break;
-    }
-    case 'compound':
-      for (const [k, v] of Object.entries(node.value)) {
-        writeTag(w, k, v);
-      }
-      w.u8(0);
-      break;
-    default:
-      throw new Error('Unknown type: ' + node.type);
-  }
-}
 
-// ========== Decompression ==========
-async function decompressBytes(bytes, format) {
-  if (typeof DecompressionStream === 'undefined') {
-    throw new Error('Your browser lacks DecompressionStream. Use Chrome/Edge/Firefox, or Safari 16.4+.');
-  }
-  let ds;
-  if (format === 'gzip') ds = new DecompressionStream('gzip');
-  else if (format === 'zlib') ds = new DecompressionStream('deflate');
-  else if (format === 'raw')  ds = new DecompressionStream('deflate-raw');
-  else throw new Error('Unknown compression format: ' + format);
-  const stream = new Blob([bytes]).stream().pipeThrough(ds);
-  const buf = await new Response(stream).arrayBuffer();
-  return new Uint8Array(buf);
-}
-
-async function compressBytes(bytes, format) {
-  if (typeof CompressionStream === 'undefined') {
-    throw new Error('Your browser lacks CompressionStream. Use Chrome/Edge/Firefox, or Safari 16.4+.');
-  }
-  let cs;
-  if (format === 'gzip') cs = new CompressionStream('gzip');
-  else if (format === 'zlib') cs = new CompressionStream('deflate');
-  else if (format === 'raw')  cs = new CompressionStream('deflate-raw');
-  else throw new Error('Unknown compression format: ' + format);
-  const stream = new Blob([bytes]).stream().pipeThrough(cs);
-  const buf = await new Response(stream).arrayBuffer();
-  return new Uint8Array(buf);
-}
-
-function detectCompression(bytes) {
-  if (bytes.length < 2) return null;
-  if (bytes[0] === 0x1F && bytes[1] === 0x8B) return 'gzip';
-  if (bytes[0] === 0x78 && [0x01, 0x5E, 0x9C, 0xDA].includes(bytes[1])) return 'zlib';
-  return null;
-}
-
-async function tryDecompress(bytes, formats) {
-  let lastErr;
-  for (const fmt of formats) {
-    try {
-      const out = await decompressBytes(bytes, fmt);
-      if (out.length > 0) return { data: out, format: fmt };
-    } catch (e) { lastErr = e; }
-  }
-  throw lastErr || new Error('All decompression attempts failed');
-}
-
-// ========== Byte helpers ==========
-function toUint8Array(arr) {
-  if (arr instanceof Uint8Array) return arr;
-  if (arr instanceof Int8Array) return new Uint8Array(arr.buffer, arr.byteOffset, arr.byteLength);
-  if (Array.isArray(arr) || ArrayBuffer.isView(arr)) {
-    const out = new Uint8Array(arr.length);
-    for (let i = 0; i < arr.length; i++) out[i] = arr[i] & 0xFF;
-    return out;
-  }
-  throw new Error('Cannot convert value to bytes');
-}
-
-// ========== File processing ==========
-async function processFile(file) {
-  const buf = await file.arrayBuffer();
-  let bytes = new Uint8Array(buf);
-
-  if (detectCompression(bytes) === 'gzip') {
-    bytes = await decompressBytes(bytes, 'gzip');
-  }
-
-  let firstNonWs = -1;
-  for (let i = 0; i < Math.min(bytes.length, 200); i++) {
-    const b = bytes[i];
-    if (b !== 0x20 && b !== 0x09 && b !== 0x0A && b !== 0x0D) { firstNonWs = i; break; }
-  }
-  if (firstNonWs >= 0 && bytes[firstNonWs] === 0x7B /* { */) {
-    let json;
-    try { json = JSON.parse(new TextDecoder().decode(bytes)); }
-    catch (e) {
-      // Could be SNBT, not JSON. Try parsing it as SNBT.
-      try {
-        const tree = parseSNBT(new TextDecoder().decode(bytes));
-        return await processSNBT(tree, file.name);
-      } catch (e2) {
-        throw new Error('File looks like JSON but failed to parse: ' + e.message);
-      }
-    }
-    return await processJSON(json, file.name);
-  }
-
-  if (bytes[0] !== 0x0A && detectCompression(bytes) === 'zlib') {
-    try {
-      const un = await decompressBytes(bytes, 'zlib');
-      if (un[0] === 0x0A) bytes = un;
-    } catch (e) { /* fall through */ }
-  }
-  if (bytes[0] !== 0x0A) {
-    throw new Error('Not a recognized NBT file (first byte = 0x' + bytes[0].toString(16) + ')');
-  }
-  const reader = new NBTReader(bytes, true);
-  const root = reader.readRoot();
-  return await processNBT(root, file.name);
-}
-
-async function processSNBT(tree, fileName) {
-  if (!tree || tree.type !== 'compound') throw new Error('SNBT root must be a compound');
-  const v = tree.value;
-  const size = v.size && v.size.value ? v.size.value.map(x => x.value) : undefined;
-  const format_version = v.format_version ? v.format_version.value : undefined;
-  const compressionFlag = v.compression ? v.compression.value : undefined;
-  const origin = v.structure_world_origin ? v.structure_world_origin.value.map(x => x.value) : undefined;
-  const structureNode = v.structure;
-  if (!structureNode || structureNode.type !== 'compound') {
-    // Maybe the whole thing is the structure itself (no wrapper)
-    if (v.palette || v.block_indices) {
-      const innerBytes = serializeNBTNode(tree);
-      return await finalizeResult({ size, format_version, compressionFlag, origin, innerBytes, fileName, rawRoot: v });
-    }
-    throw new Error('Missing `structure` compound in SNBT');
-  }
-  const innerBytes = serializeNBTNode(structureNode);
-  return await finalizeResult({ size, format_version, compressionFlag, origin, innerBytes, fileName, rawRoot: v });
-}
-
-async function processJSON(json, fileName) {
-  let v = null;
-  if (json.root) {
-    if (json.root.type === 'compound') v = json.root.value;
-    else if (json.root.value !== undefined) v = json.root.value;
-    else v = json.root;
-  }
-  if (!v) {
-    if (json.size || json.structure) v = json;
-    else throw new Error('Cannot find NBT root in JSON');
-  }
-  const size = extractIntArray(v.size);
-  const format_version = extractInt(v.format_version);
-  const compressionFlag = extractInt(v.compression);
-  const origin = extractIntArray(v.structure_world_origin);
-  const structureBytes = extractBytes(v.structure);
-  if (!structureBytes) throw new Error('No `structure` byte array found in JSON');
-  return await buildResult({ size, format_version, compressionFlag, origin, structureBytes, fileName, rawRoot: v });
-}
-
-async function processNBT(root, fileName) {
-  const v = root && root.value;
-  if (!v || typeof v !== 'object') throw new Error('NBT root is not a compound');
-  const size = extractIntArray(v.size);
-  const format_version = extractInt(v.format_version);
-  const compressionFlag = extractInt(v.compression);
-  const origin = extractIntArray(v.structure_world_origin);
-  const structureBytes = extractBytes(v.structure);
-  if (!structureBytes) throw new Error('No `structure` byte array found in NBT root');
-  return await buildResult({ size, format_version, compressionFlag, origin, structureBytes, fileName, rawRoot: v });
-}
-
-async function buildResult({ size, format_version, compressionFlag, origin, structureBytes, fileName, rawRoot }) {
-  let innerBytes = structureBytes;
-  let usedFormat = 'none';
-
-  const detected = detectCompression(structureBytes);
-  if (detected) {
-    const r = await tryDecompress(structureBytes, [detected]);
-    innerBytes = r.data;
-    usedFormat = r.format;
-  } else if (compressionFlag === 1) {
-    try {
-      const r = await tryDecompress(structureBytes, ['zlib', 'raw', 'gzip']);
-      innerBytes = r.data;
-      usedFormat = r.format;
-    } catch (e) {
-      if (structureBytes[0] === 0x0A) {
-        usedFormat = 'none (compression flag set, but data looks uncompressed)';
-      } else {
-        throw e;
-      }
-    }
-  } else if (compressionFlag === 0 && structureBytes[0] !== 0x0A) {
-    try {
-      const r = await tryDecompress(structureBytes, ['zlib', 'raw']);
-      innerBytes = r.data;
-      usedFormat = r.format + ' (auto-detected despite flag=0)';
-    } catch (e) { /* leave as-is */ }
-  }
-
-  if (innerBytes.length === 0 || innerBytes[0] !== 0x0A) {
-    throw new Error('Decompressed data is not valid NBT (first byte = 0x' + (innerBytes[0] || 0).toString(16) + ')');
-  }
-  return await finalizeResult({ size, format_version, compressionFlag, origin, innerBytes, fileName, rawRoot, usedFormat });
-}
-
-async function finalizeResult({ size, format_version, compressionFlag, origin, innerBytes, fileName, rawRoot, usedFormat }) {
-  const innerReader = new NBTReader(innerBytes, true);
-  const innerRoot = innerReader.readRoot();
-  return {
-    fileName, size, origin, format_version,
-    compressionFlag: compressionFlag !== undefined ? compressionFlag : 0,
-    usedFormat: usedFormat || 'none',
-    innerRoot, decompressedBytes: innerBytes, rawRoot
-  };
-}
-
-// ========== JSON extractors ==========
-function extractInt(x) {
-  if (x == null) return undefined;
-  if (typeof x === 'number') return x;
-  if (typeof x === 'object') {
-    if (typeof x.value === 'number') return x.value;
-    if (Array.isArray(x.items) && x.items.length) return extractInt(x.items[0]);
-  }
-  return undefined;
-}
-function extractIntArray(x) {
-  if (x == null) return undefined;
-  if (Array.isArray(x) && x.every(n => typeof n === 'number')) return x;
-  if (typeof x === 'object') {
-    if (Array.isArray(x.items)) return x.items.map(extractInt);
-    if (Array.isArray(x.value)) return x.value.map(extractInt);
-    if (x.value && Array.isArray(x.value.items)) return x.value.items.map(extractInt);
-  }
-  return undefined;
-}
-function extractBytes(x) {
-  if (x == null) return null;
-  if (x instanceof Int8Array || x instanceof Uint8Array) return toUint8Array(x);
-  if (Array.isArray(x) && x.every(n => typeof n === 'number')) return toUint8Array(x);
-  if (typeof x === 'object') {
-    if (Array.isArray(x.value)) return toUint8Array(x.value);
-    if (x.value && Array.isArray(x.value.value)) return toUint8Array(x.value.value);
-    if (x.value instanceof Int8Array || x.value instanceof Uint8Array) return toUint8Array(x.value);
-  }
-  return null;
-}
-
-// ========== Rebuild .mcstructure (FIXED) ==========
-function rebuildMcstructure(size, origin, innerRoot, formatVersion) {
-  const w = new NBTWriter(true);
-  // Root compound, empty name
-  w.u8(10); w.u16(0);
-
-  // format_version : int
-  w.u8(3); w.str('format_version'); w.i32(formatVersion !== undefined ? formatVersion : 2);
-
-  // size : list<int> [x,y,z]
-  w.u8(9); w.str('size');
-  w.u8(3); w.i32(3);
-  for (const v of size) w.i32(v);
-
-  // structure : compound (uncompressed NBT payload)
-  w.u8(10); w.str('structure');
-  for (const [k, v] of Object.entries(innerRoot.value)) {
-    writeTag(w, k, v);
-  }
-  w.u8(0); // End structure compound
-
-  // structure_world_origin : list<int>
-  if (origin && origin.length === 3) {
-    w.u8(9); w.str('structure_world_origin');
-    w.u8(3); w.i32(3);
-    for (const v of origin) w.i32(v);
-  }
-
-  // compression : int = 0
-  w.u8(3); w.str('compression'); w.i32(0);
-
-  // End root
-  w.u8(0);
-  return w.finish();
-}
-
-async function rebuildMcstructureCompressed(size, origin, innerRoot, formatVersion) {
-  const innerBytes = serializeNBTNode(innerRoot);
-  const compressedBytes = await compressBytes(innerBytes, 'zlib');
-  
-  const w = new NBTWriter(true);
-  w.u8(10); w.u16(0); // Root compound, empty name
-  w.u8(3); w.str('format_version'); w.i32(formatVersion !== undefined ? formatVersion : 2);
-
-  w.u8(9); w.str('size');
-  w.u8(3); w.i32(3);
-  for (const v of size) w.i32(v);
-
-  // structure : byteArray (zlib compressed)
-  w.u8(7); w.str('structure');
-  w.i32(compressedBytes.length);
-  w.push(compressedBytes);
-
-  if (origin && origin.length === 3) {
-    w.u8(9); w.str('structure_world_origin');
-    w.u8(3); w.i32(3);
-    for (const v of origin) w.i32(v);
-  }
-
-  w.u8(3); w.str('compression'); w.i32(1); // Set flag to 1
-  w.u8(0);
-  return w.finish();
-}
-
-// ========== SNBT generation ==========
-function colorFor(name) {
-  let h = 0;
-  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
-  const hue = h % 360;
-  const sat = 55 + ((h >> 8) % 20);
-  const light = 42 + ((h >> 16) % 16);
-  return `hsl(${hue} ${sat}% ${light}%)`;
-}
-
-function toSNBT(node, indent = 0) {
-  const pad = '    '.repeat(indent);
-  const padIn = '    '.repeat(indent + 1);
-
-  if (node == null) return 'null';
-  if (typeof node === 'bigint') return node.toString() + 'L';
-  if (typeof node === 'string') {
-    return '"' + node.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
-  }
-  if (typeof node === 'number') return String(node);
-
-  if (node instanceof Int8Array) {
-    const items = Array.from(node).map(v => v + 'b').join(', ');
-    return '[B; ' + items + ']';
-  }
-  if (node instanceof Int32Array) {
-    const items = Array.from(node).map(v => v + '').join(', ');
-    return '[I; ' + items + ']';
-  }
-  if (Array.isArray(node)) {
-    if (node.length === 0) return '[]';
-    const allBigInt = node.every(x => typeof x === 'bigint');
-    if (allBigInt) {
-      const items = node.map(x => x.toString() + 'L').join(', ');
-      return '[L; ' + items + ']';
-    }
-    
-    if (node._nbtType === 4) {
-       const items = node.map(x => x.toString() + 'L').join(', ');
-       return '[' + items + ']';
-    }
-    
-    if (node._nbtType === 5) {
-       const items = node.map(x => {
-         let s = String(x);
-         if (!s.includes('.') && !s.includes('e')) s += '.0';
-         return s + 'f';
-       }).join(', ');
-       return '[' + items + ']';
-    }
-    
-    if (node._nbtType === 6) {
-       const items = node.map(x => {
-         let s = String(x);
-         if (!s.includes('.') && !s.includes('e')) s += '.0';
-         return s + 'd';
-       }).join(', ');
-       return '[' + items + ']';
-    }
-
-    const items = node.map(x => toSNBT(x, indent + 1)).join(', ');
-    return '[' + items + ']';
-  }
-  if (typeof node === 'object') {
-    const keys = Object.keys(node);
-    if (keys.length === 0) return '{}';
-    const items = keys.map(k => {
-      const keyStr = /^[a-zA-Z0-9_\-+.]+$/.test(k) ? k : '"' + k.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
-      return padIn + keyStr + ': ' + toSNBT(node[k], indent + 1);
-    }).join(',\n');
-    return '{\n' + items + '\n' + pad + '}';
-  }
-  return String(node);
-}
-
-function buildDecompressedSNBT(result) {
-  const inner = result.innerRoot && result.innerRoot.value ? result.innerRoot.value : {};
-  const full = {
-    compression: 0,
-    format_version: result.format_version !== undefined ? result.format_version : 2,
-    size: result.size || [0, 0, 0],
-    structure: inner,
-    structure_world_origin: result.origin || [0, 0, 0]
-  };
-  return toSNBT(full);
-}
-
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]);
-}
-
-function saveBlob(blob, filename) {
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  a.style.display = 'none';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-}
-
-// ========== Rendering ==========
-const ICON = {
-  download: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
-  package: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
-  copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
-  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>',
-  refresh: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>',
-  play: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg>'
-};
-
-let currentResult = null;
-
-function renderResult(result) {
-  currentResult = result;
-  const out = document.getElementById('output');
-  out.innerHTML = '';
-
-  const inner = result.innerRoot && result.innerRoot.value ? result.innerRoot.value : {};
-  const paletteObj = inner.palette || {};
-  const defaultPal = paletteObj.default || {};
-  const blockPalette = defaultPal.block_palette || [];
-  const blockIndices = inner.block_indices || [];
-  const entities = inner.entities || [];
-
-  // ---- info panel ----
-  const info = document.createElement('div');
-  info.className = 'panel';
-  const rows = [
-    ['File', result.fileName],
-    ['Size (X, Y, Z)', (result.size || []).join(' × ')],
-    ['Format version', result.format_version],
-    ['Compression flag (root)', result.compressionFlag],
-    ['Compression detected / used', result.usedFormat],
-    ['World origin', result.origin ? result.origin.join(', ') : '—'],
-    ['Palette entries', blockPalette.length],
-    ['Block index arrays', blockIndices.length],
-    ['Entities', entities.length],
-    ['Decompressed payload', result.decompressedBytes.length + ' bytes'],
-  ];
-  info.innerHTML = '<h2>File info</h2><div class="kv">' +
-    rows.map(([k, v]) => `<div class="k">${escapeHtml(String(k))}</div><div>${escapeHtml(String(v))}</div>`).join('') +
-    '</div>';
-
-  const dl1 = document.createElement('button');
-  dl1.className = 'btn';
-  dl1.innerHTML = ICON.download + '<span>Download NBT</span>';
-  dl1.title = 'Download the raw decompressed NBT payload';
-  dl1.onclick = () => {
-    const blob = new Blob([result.decompressedBytes], { type: 'application/octet-stream' });
-    saveBlob(blob, (result.fileName || 'structure').replace(/\.[^.]+$/, '') + '.decompressed.nbt');
-  };
-
-  const dl2 = document.createElement('button');
-  dl2.className = 'btn primary';
-  dl2.innerHTML = ICON.package + '<span>Download .mcstructure</span>';
-  dl2.title = 'Download a rebuilt .mcstructure (compression=0). Uses current textarea if edited.';
-  dl2.onclick = () => {
-    try {
-      const ta = document.getElementById('snbt-editor');
-      if (!ta) throw new Error('SNBT editor not found');
-      const tree = parseSNBT(ta.value);
-      if (tree.type !== 'compound') throw new Error('SNBT root must be a compound');
-      const structureNode = tree.value.structure;
-      if (!structureNode || structureNode.type !== 'compound') {
-        throw new Error('SNBT must contain a `structure` compound');
-      }
-      const size = tree.value.size ? tree.value.size.value.map(x => x.value) : result.size;
-      const origin = tree.value.structure_world_origin
-        ? tree.value.structure_world_origin.value.map(x => x.value)
-        : result.origin;
-      const fmt = tree.value.format_version ? tree.value.format_version.value : result.format_version;
-      const rebuilt = rebuildMcstructure(size, origin, structureNode, fmt);
-      
-      // Verify
-      if (rebuilt.length === 0 || rebuilt[0] !== 0x0A) {
-        throw new Error('Rebuilt file did not start with compound tag byte (0x0A). Got 0x' + (rebuilt[0] || 0).toString(16) + '. Length: ' + rebuilt.length);
-      }
-      try {
-        const verify = new NBTReader(rebuilt, true);
-        verify.readRoot();
-      } catch (e) {
-        throw new Error('Rebuilt NBT failed to parse: ' + e.message);
-      }
-      const blob = new Blob([rebuilt], { type: 'application/octet-stream' });
-      saveBlob(blob, (result.fileName || 'structure').replace(/\.[^.]+$/, '') + '.uncompressed.mcstructure');
-    } catch (e) {
-      alert('Rebuild failed:\n' + e.message);
-    }
-  };
-
-  const dl3 = document.createElement('button');
-  dl3.className = 'btn primary';
-  dl3.innerHTML = ICON.package + '<span>Download compressed .mcstructure</span>';
-  dl3.title = 'Download a rebuilt .mcstructure (compression=1, zlib). Uses current textarea.';
-  dl3.onclick = async () => {
-    try {
-      const ta = document.getElementById('snbt-editor');
-      if (!ta) throw new Error('SNBT editor not found');
-      const tree = parseSNBT(ta.value);
-      if (tree.type !== 'compound') throw new Error('SNBT root must be a compound');
-      const structureNode = tree.value.structure;
-      if (!structureNode || structureNode.type !== 'compound') {
-        throw new Error('SNBT must contain a `structure` compound');
-      }
-      const size = tree.value.size ? tree.value.size.value.map(x => x.value) : result.size;
-      const origin = tree.value.structure_world_origin
-        ? tree.value.structure_world_origin.value.map(x => x.value)
-        : result.origin;
-      const fmt = tree.value.format_version ? tree.value.format_version.value : result.format_version;
-      const rebuilt = await rebuildMcstructureCompressed(size, origin, structureNode, fmt);
-      
-      if (rebuilt.length === 0 || rebuilt[0] !== 0x0A) {
-        throw new Error('Rebuilt file did not start with compound tag byte (0x0A).');
-      }
-      try {
-        const verify = new NBTReader(rebuilt, true);
-        verify.readRoot();
-      } catch (e) {
-        throw new Error('Rebuilt NBT failed to parse: ' + e.message);
-      }
-      const blob = new Blob([rebuilt], { type: 'application/octet-stream' });
-      saveBlob(blob, (result.fileName || 'structure').replace(/\.[^.]+$/, '') + '.compressed.mcstructure');
-    } catch (e) {
-      alert('Rebuild failed:\n' + e.message);
-    }
-  };
-
-  const dl4 = document.createElement('button');
-  dl4.className = 'btn';
-  dl4.innerHTML = ICON.copy + '<span>Copy SNBT</span>';
-  dl4.title = 'Copy the current SNBT textarea content';
-  dl4.onclick = async () => {
-    try {
-      const ta = document.getElementById('snbt-editor');
-      const snbt = ta ? ta.value : buildDecompressedSNBT(result);
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(snbt);
-      } else {
-        const tmp = document.createElement('textarea');
-        tmp.value = snbt;
-        document.body.appendChild(tmp);
-        tmp.select();
-        document.execCommand('copy');
-        document.body.removeChild(tmp);
-      }
-      dl4.innerHTML = ICON.check + '<span>Copied!</span>';
-      dl4.classList.add('primary');
-      setTimeout(() => {
-        dl4.innerHTML = ICON.copy + '<span>Copy SNBT</span>';
-        dl4.classList.remove('primary');
-      }, 1500);
-    } catch (e) {
-      alert('Copy failed: ' + e.message);
-    }
-  };
-
-  const dlWrap = document.createElement('div');
-  dlWrap.className = 'btn-row';
-  dlWrap.appendChild(dl1); dlWrap.appendChild(dl2); dlWrap.appendChild(dl3); dlWrap.appendChild(dl4);
-  info.appendChild(dlWrap);
-  
-  // ---- command block towers ----
-  const blockPosData = defaultPal.block_position_data || {};
-  const cbList = [];
-  for (const [posIdxStr, posData] of Object.entries(blockPosData)) {
-    const posIdx = parseInt(posIdxStr, 10);
-    if (isNaN(posIdx) || !posData || !posData.block_entity_data) continue;
-    const bed = posData.block_entity_data;
-    if (bed.id !== 'CommandBlock') continue;
-    
-    let bType = 'command_block';
-    if (blockIndices[0] && blockIndices[0][posIdx] !== undefined) {
-      const palIdx = blockIndices[0][posIdx];
-      const palEntry = blockPalette[palIdx];
-      if (palEntry && palEntry.name) {
-        if (palEntry.name.includes('repeating')) bType = 'repeating';
-        else if (palEntry.name.includes('chain')) bType = 'chain';
-        else if (palEntry.name.includes('command_block')) bType = 'impulse';
-      }
-    }
-
-    cbList.push({
-      x: bed.x, y: bed.y, z: bed.z,
-      command: bed.Command || '',
-      delay: bed.TickDelay || 0,
-      customName: bed.CustomName || '',
-      conditional: bed.conditionalMode === 1,
-      auto: bed.auto === 1,
-      type: bType
-    });
-  }
-
-  if (cbList.length > 0) {
-    // Group contiguous command blocks using flood fill
-    const groups = [];
-    const visited = new Set();
-    const posMap = new Map();
-    cbList.forEach(cb => posMap.set(`${cb.x},${cb.y},${cb.z}`, cb));
-
-    for (const cb of cbList) {
-      const key = `${cb.x},${cb.y},${cb.z}`;
-      if (visited.has(key)) continue;
-
-      const group = [];
-      const queue = [cb];
-      visited.add(key);
-
-      while (queue.length > 0) {
-        const current = queue.shift();
-        group.push(current);
-
-        const neighbors = [
-          {x: current.x+1, y: current.y, z: current.z},
-          {x: current.x-1, y: current.y, z: current.z},
-          {x: current.x, y: current.y+1, z: current.z},
-          {x: current.x, y: current.y-1, z: current.z},
-          {x: current.x, y: current.y, z: current.z+1},
-          {x: current.x, y: current.y, z: current.z-1},
-        ];
-
-        for (const n of neighbors) {
-          const nKey = `${n.x},${n.y},${n.z}`;
-          if (posMap.has(nKey) && !visited.has(nKey)) {
-            visited.add(nKey);
-            queue.push(posMap.get(nKey));
-          }
-        }
-      }
-
-      // Determine primary axis for sorting and labeling
-      let minX = Infinity, maxX = -Infinity;
-      let minY = Infinity, maxY = -Infinity;
-      let minZ = Infinity, maxZ = -Infinity;
-      
-      group.forEach(c => {
-        if (c.x < minX) minX = c.x;
-        if (c.x > maxX) maxX = c.x;
-        if (c.y < minY) minY = c.y;
-        if (c.y > maxY) maxY = c.y;
-        if (c.z < minZ) minZ = c.z;
-        if (c.z > maxZ) maxZ = c.z;
-      });
-
-      const spreadX = maxX - minX;
-      const spreadY = maxY - minY;
-      const spreadZ = maxZ - minZ;
-
-      let isTower = spreadY >= spreadX && spreadY >= spreadZ;
-      
-      if (isTower) {
-        group.sort((a, b) => a.y - b.y);
-      } else if (spreadX >= spreadY && spreadX >= spreadZ) {
-        group.sort((a, b) => a.x - b.x);
-      } else {
-        group.sort((a, b) => a.z - b.z);
-      }
-
-      groups.push({ blocks: group, isTower });
-    }
-
-    // Sort the groups by their first block coordinates
-    groups.sort((a, b) => {
-      const A = a.blocks[0];
-      const B = b.blocks[0];
-      return A.x - B.x || A.z - B.z || A.y - B.y;
-    });
-
-    let towerText = '=============\n';
-    groups.forEach((g, i) => {
-      const t = g.blocks;
-      const label = g.isTower ? 'tower' : 'line';
-      const start = t[0];
-      const end = t[t.length - 1];
-      
-      let coordStr = `${start.x} ${start.y} ${start.z}`;
-      if (t.length > 1 && (start.x !== end.x || start.y !== end.y || start.z !== end.z)) {
-        coordStr += ` to ${end.x} ${end.y} ${end.z}`;
-      }
-      
-      towerText += `${label} ${i + 1}: coords ${coordStr}\n\n`;
-      t.forEach(b => {
-        let typeStr = b.type;
-        if (typeStr === 'repeating') typeStr = 'Repeat';
-        else if (typeStr === 'chain') typeStr = 'Chain';
-        else if (typeStr === 'impulse' || typeStr === 'command_block') typeStr = 'Impulse';
-        
-        let flags = [];
-        if (b.auto) flags.push('Always Active');
-        else flags.push('Needs Redstone');
-        if (b.conditional) flags.push('Conditional');
-        const flagStr = ` (${flags.join(', ')})`;
-
-        const cname = b.customName ? `[${b.customName}] ` : '';
-        const cmd = b.command.startsWith('/') ? b.command : '/' + b.command;
-
-        towerText += `${cname}${typeStr} Delay ${b.delay}${flagStr}\n`;
-        towerText += `${cmd}\n`;
-      });
-      towerText += `\n======================================\n\n`;
-    });
-
-    const cp = document.createElement('div');
-    cp.className = 'panel';
-    cp.innerHTML = '<h2>Command Block Layout</h2>' +
-      '<div class="note">Command blocks automatically grouped by their X/Z coordinates and ordered. Includes CustomName, conditional state, and auto state.</div>' +
-      '<textarea class="snbt-editor" id="command-towers-text" style="min-height: 180px; max-height: 400px;" readonly></textarea>' +
-      '<div class="btn-row"><button class="btn primary" id="copy-towers-btn">' + ICON.copy + '<span>Copy Commands</span></button></div>';
-    
-    const ta = cp.querySelector('#command-towers-text');
-    ta.value = towerText;
-    
-    const copyBtn = cp.querySelector('#copy-towers-btn');
-    copyBtn.onclick = async () => {
-      try {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(ta.value);
-        } else {
-          ta.select();
-          document.execCommand('copy');
-        }
-        copyBtn.innerHTML = ICON.check + '<span>Copied!</span>';
-        setTimeout(() => { copyBtn.innerHTML = ICON.copy + '<span>Copy Commands</span>'; }, 1500);
-      } catch (e) {
-        alert('Copy failed: ' + e.message);
-      }
-    };
-    out.appendChild(cp);
-  }
-
-  out.appendChild(info);
-
-  // ---- SNBT editor ----
-  const editorPanel = document.createElement('div');
-  editorPanel.className = 'panel';
-  const snbtInitial = buildDecompressedSNBT(result);
-  editorPanel.innerHTML = '<h2>Edit SNBT</h2>' +
-    '<div class="note">Edit the SNBT below, then click <strong>Apply &amp; preview</strong> to update the palette/layout, or <strong>Download .mcstructure</strong> above. ' +
-    'Type suffixes: <code>5b</code> byte, <code>5s</code> short, <code>5L</code> long, <code>5.0f</code> float, <code>5.0d</code> double. Arrays: <code>[B; 1b, 2b]</code>, <code>[I; 1, 2]</code>, <code>[L; 1L, 2L]</code>.</div>' +
-    '<textarea class="snbt-editor" id="snbt-editor" spellcheck="false"></textarea>' +
-    '<div class="btn-row" id="snbt-btns"></div>';
-
-  const textarea = editorPanel.querySelector('#snbt-editor');
-  textarea.value = snbtInitial;
-  textarea.dataset.dirty = 'false';
-
-  textarea.addEventListener('input', () => {
-    if (textarea.dataset.dirty !== 'true') {
-      textarea.dataset.dirty = 'true';
-      textarea.classList.add('dirty');
-    }
-  });
-
-  const btnContainer = editorPanel.querySelector('#snbt-btns');
-
-  const reloadBtn = document.createElement('button');
-  reloadBtn.className = 'btn';
-  reloadBtn.innerHTML = ICON.refresh + '<span>Reload from file</span>';
-  reloadBtn.title = 'Reset the textarea to the SNBT of the currently loaded structure';
-  reloadBtn.onclick = () => {
-    textarea.value = buildDecompressedSNBT(currentResult);
-    textarea.dataset.dirty = 'false';
-    textarea.classList.remove('dirty');
-  };
-
-  const applyBtn = document.createElement('button');
-  applyBtn.className = 'btn';
-  applyBtn.innerHTML = ICON.play + '<span>Apply &amp; preview</span>';
-  applyBtn.title = 'Parse the textarea, update the structure in memory, and re-render';
-  applyBtn.onclick = async () => {
-    try {
-      const tree = parseSNBT(textarea.value);
-      if (tree.type !== 'compound') throw new Error('SNBT root must be a compound');
-      const structureNode = tree.value.structure;
-      if (!structureNode || structureNode.type !== 'compound') {
-        throw new Error('SNBT must contain a `structure` compound');
-      }
-      const inner = serializeNBTNode(structureNode);
-      const reader = new NBTReader(inner, true);
-      const innerRoot = reader.readRoot();
-      const size = tree.value.size ? tree.value.size.value.map(x => x.value) : currentResult.size;
-      const origin = tree.value.structure_world_origin
-        ? tree.value.structure_world_origin.value.map(x => x.value)
-        : currentResult.origin;
-      const fmt = tree.value.format_version ? tree.value.format_version.value : currentResult.format_version;
-      const updated = {
-        fileName: currentResult.fileName,
-        size, origin, format_version: fmt,
-        compressionFlag: 0,
-        usedFormat: 'rebuilt from SNBT',
-        innerRoot, decompressedBytes: inner, rawRoot: currentResult.rawRoot
-      };
-      renderResult(updated);
-      setStatus('ok', 'SNBT applied. Palette and layout updated.');
-    } catch (e) {
-      setStatus('err', 'Apply failed: ' + e.message);
-    }
-  };
-
-  const downloadFromSNBTBtn = document.createElement('button');
-  downloadFromSNBTBtn.className = 'btn primary';
-  downloadFromSNBTBtn.innerHTML = ICON.package + '<span>Download uncompressed .mcstructure</span>';
-  downloadFromSNBTBtn.title = 'Parse the textarea and download a fresh .mcstructure (compression=0)';
-  downloadFromSNBTBtn.onclick = () => {
-    try {
-      const tree = parseSNBT(textarea.value);
-      if (tree.type !== 'compound') throw new Error('SNBT root must be a compound');
-      const structureNode = tree.value.structure;
-      if (!structureNode || structureNode.type !== 'compound') {
-        throw new Error('SNBT must contain a `structure` compound');
-      }
-      const size = tree.value.size ? tree.value.size.value.map(x => x.value) : currentResult.size;
-      const origin = tree.value.structure_world_origin
-        ? tree.value.structure_world_origin.value.map(x => x.value)
-        : currentResult.origin;
-      const fmt = tree.value.format_version ? tree.value.format_version.value : currentResult.format_version;
-      const rebuilt = rebuildMcstructure(size, origin, structureNode, fmt);
-      if (rebuilt.length === 0 || rebuilt[0] !== 0x0A) {
-        throw new Error('Rebuilt file did not start with compound tag byte (0x0A).');
-      }
-      try { new NBTReader(rebuilt, true).readRoot(); }
-      catch (e) { throw new Error('Rebuilt NBT failed to parse: ' + e.message); }
-      const blob = new Blob([rebuilt], { type: 'application/octet-stream' });
-      saveBlob(blob, (currentResult.fileName || 'structure').replace(/\.[^.]+$/, '') + '.edited.mcstructure');
-      setStatus('ok', 'Downloaded edited .mcstructure (' + rebuilt.length + ' bytes).');
-    } catch (e) {
-      setStatus('err', 'Download failed: ' + e.message);
-    }
-  };
-
-  const downloadCompressedFromSNBTBtn = document.createElement('button');
-  downloadCompressedFromSNBTBtn.className = 'btn primary';
-  downloadCompressedFromSNBTBtn.innerHTML = ICON.package + '<span>Download compressed .mcstructure</span>';
-  downloadCompressedFromSNBTBtn.title = 'Parse the textarea, compress with zlib, and download (compression=1)';
-  downloadCompressedFromSNBTBtn.onclick = async () => {
-    try {
-      const tree = parseSNBT(textarea.value);
-      if (tree.type !== 'compound') throw new Error('SNBT root must be a compound');
-      const structureNode = tree.value.structure;
-      if (!structureNode || structureNode.type !== 'compound') {
-        throw new Error('SNBT must contain a `structure` compound');
-      }
-      const size = tree.value.size ? tree.value.size.value.map(x => x.value) : currentResult.size;
-      const origin = tree.value.structure_world_origin
-        ? tree.value.structure_world_origin.value.map(x => x.value)
-        : currentResult.origin;
-      const fmt = tree.value.format_version ? tree.value.format_version.value : currentResult.format_version;
-      const rebuilt = await rebuildMcstructureCompressed(size, origin, structureNode, fmt);
-      if (rebuilt.length === 0 || rebuilt[0] !== 0x0A) {
-        throw new Error('Rebuilt file did not start with compound tag byte (0x0A).');
-      }
-      try { new NBTReader(rebuilt, true).readRoot(); }
-      catch (e) { throw new Error('Rebuilt NBT failed to parse: ' + e.message); }
-      const blob = new Blob([rebuilt], { type: 'application/octet-stream' });
-      saveBlob(blob, (currentResult.fileName || 'structure').replace(/\.[^.]+$/, '') + '.compressed.mcstructure');
-      setStatus('ok', 'Downloaded compressed .mcstructure (' + rebuilt.length + ' bytes).');
-    } catch (e) {
-      setStatus('err', 'Download failed: ' + e.message);
-    }
-  };
-
-  btnContainer.appendChild(reloadBtn);
-  btnContainer.appendChild(applyBtn);
-  btnContainer.appendChild(downloadFromSNBTBtn);
-  btnContainer.appendChild(downloadCompressedFromSNBTBtn);
-
-  out.appendChild(editorPanel);
-
-  // ---- palette ----
-  if (blockPalette.length) {
-    const p = document.createElement('div');
-    p.className = 'panel';
-    let html = '<h2>Palette</h2><div class="palette">';
-    blockPalette.forEach((entry, i) => {
-      const name = entry.name || '(unnamed)';
-      const states = entry.states && Object.keys(entry.states).length
-        ? JSON.stringify(entry.states) : '';
-      html += `<div class="row">
-        <div class="idx">${i}</div>
-        <div class="swatch" style="background:${colorFor(name)}"></div>
-        <div>${escapeHtml(name)}</div>
-        ${states ? `<div class="states">${escapeHtml(states)}</div>` : ''}
-      </div>`;
-    });
-    html += '</div>';
-    p.innerHTML = html;
-    out.appendChild(p);
-  }
-
-  // ---- slices ----
-  if (result.size && result.size.length === 3 && blockIndices.length && blockPalette.length) {
-    const [sx, sy, sz] = result.size;
-    const totalBlocks = sx * sy * sz;
-
-    if (totalBlocks > 20000) {
-      const warn = document.createElement('div');
-      warn.className = 'panel';
-      warn.innerHTML = `<h2>Layout</h2><div class="note">Structure is large (${totalBlocks} blocks). Visual layout skipped to keep the page responsive.</div>`;
-      out.appendChild(warn);
-    } else {
-      const panel = document.createElement('div');
-      panel.className = 'panel';
-      let html = '<h2>Block layout (Y slices)</h2>';
-      html += '<div class="note">Cell label = palette index. Hover for block name.</div>';
-      html += '<div class="slices">';
-
-      const primaryIdx = blockIndices[0] || [];
-      const secondaryIdx = blockIndices[1] || [];
-      const showSecondary = secondaryIdx.length && secondaryIdx.some(v => v >= 0);
-
-      for (let y = 0; y < sy; y++) {
-        html += `<div class="slice"><h3>Y = ${y}</h3><div class="grid" style="grid-template-columns: repeat(${sx}, 26px)">`;
-        for (let z = 0; z < sz; z++) {
-          for (let x = 0; x < sx; x++) {
-            const pos = y * sx * sz + z * sx + x;
-            const pi = primaryIdx[pos];
-            const si = secondaryIdx[pos];
-            if (pi == null || pi < 0) {
-              html += `<div class="cell empty" title="air">·</div>`;
+        let html = '';
+
+        // Always show a name — fallback to raw name if no displayName
+        const displayName = item.displayName || item.name.replace('minecraft:', '');
+        html += `<div class="name">${parseMC('§d' + displayName)}</div>`;
+
+        // Enchantments (Feature removed by user request)
+
+        // Lore + keep in one parse so last § color carries into keep
+        const tag = item.ref.tag?.value || item.ref.tag;
+        const display = tag?.display?.value || tag?.display;
+        const lore = display?.Lore?.value ?? display?.Lore;
+        let body = '';
+        if (lore != null && lore !== '') {
+            if (Array.isArray(lore)) {
+                body = lore.map(line => String(line?.value ?? line)).join('\n');
             } else {
-              const entry = blockPalette[pi] || { name: '???' };
-              const nm = entry.name || '???';
-              const sec = showSecondary && si >= 0 ? ` + secondary[${si}]` : '';
-              html += `<div class="cell" style="background:${colorFor(nm)}" title="${escapeHtml(nm)} (palette ${pi})${escapeHtml(sec)}">${pi}</div>`;
+                body = String(lore).replace(/\\n/g, '\n');
             }
-          }
         }
-        html += '</div></div>';
-      }
-      html += '</div>';
-      panel.innerHTML = html;
-      out.appendChild(panel);
+        if (tag?.['minecraft:keep_on_death'] !== undefined) {
+            if (body) body += '\n';
+            body += 'This item is not lost on death';
+        }
+        if (body) {
+            html += `<div class="lore">${parseMC(body)}</div>`;
+        }
 
-      if (showSecondary) {
-        const sec = document.createElement('div');
-        sec.className = 'panel';
-        let h = '<h2>Secondary block layer (block_indices[1])</h2>';
-        h += '<div class="note">Non-negative entries index the same palette.</div>';
-        h += '<div class="slices">';
-        for (let y = 0; y < sy; y++) {
-          h += `<div class="slice"><h3>Y = ${y}</h3><div class="grid" style="grid-template-columns: repeat(${sx}, 26px)">`;
-          for (let z = 0; z < sz; z++) {
-            for (let x = 0; x < sx; x++) {
-              const pos = y * sx * sz + z * sx + x;
-              const si = secondaryIdx[pos];
-              if (si == null || si < 0) {
-                h += `<div class="cell empty" title="none">·</div>`;
-              } else {
-                const entry = blockPalette[si] || { name: '???' };
-                const nm = entry.name || '???';
-                h += `<div class="cell" style="background:${colorFor(nm)}" title="${escapeHtml(nm)} (palette ${si})">${si}</div>`;
-              }
-            }
-          }
-          h += '</div></div>';
+        tooltipEl.innerHTML = html;
+        tooltipEl.style.display = 'block';
+
+        let x = e.clientX + 10;
+        let y = e.clientY + 10;
+        const rect = tooltipEl.getBoundingClientRect();
+        if (x + rect.width > window.innerWidth) {
+            x = e.clientX - rect.width - 10;
         }
-        h += '</div>';
-        sec.innerHTML = h;
-        out.appendChild(sec);
-      }
+        if (y + rect.height > window.innerHeight) {
+            y = e.clientY - rect.height - 10;
+        }
+        tooltipEl.style.left = x + 'px';
+        tooltipEl.style.top = y + 'px';
+
+        // Glow effect (uses first color from display name)
+        const colorCode = getFirstColorFromName(item.displayName || item.name.replace('minecraft:', ''));
+        const newGlow = colorCode.startsWith('#') ? colorCode : (MC_COLORS[colorCode] || '#00f7ff');
+        document.documentElement.style.setProperty('--glow-color', newGlow);
+        glowOverlay.style.opacity = 0.15;
     }
-  }
 
-  // ---- raw NBT tree ----
-  const rawPanel = document.createElement('div');
-  rawPanel.className = 'panel';
-  rawPanel.innerHTML = '<h2>Decompressed NBT tree</h2><details><summary>Show / hide raw NBT</summary><pre></pre></details>';
-  rawPanel.querySelector('pre').textContent = stringifyNBT(result.innerRoot);
-  out.appendChild(rawPanel);
+    function hideTooltip() {
+        tooltipEl.style.display = 'none';
+        glowOverlay.style.opacity = 0.1;
+    }
 
-  if (result.rawRoot) {
-    const orig = document.createElement('div');
-    orig.className = 'panel';
-    orig.innerHTML = '<h2>Original root NBT (before decompression)</h2><details><summary>Show / hide</summary><pre></pre></details>';
-    orig.querySelector('pre').textContent = stringifyNBT({ type: 10, name: '', value: result.rawRoot });
-    out.appendChild(orig);
-  }
-}
+    // ========== RENDER LIST ==========
+    function renderList() {
+        chestContainer.innerHTML = '';
 
-function stringifyNBT(node, indent = 0) {
-  const pad = '  '.repeat(indent);
-  if (node == null) return pad + 'null';
-  if (typeof node === 'bigint') return pad + node.toString() + 'n';
-  if (typeof node !== 'object') return pad + JSON.stringify(node);
-  if (node instanceof Int8Array) {
-    const preview = Array.from(node.slice(0, 16)).join(', ');
-    const more = node.length > 16 ? `, … (${node.length} total)` : '';
-    return pad + `[byteArray] ${preview}${more}`;
-  }
-  if (node instanceof Int32Array) return pad + `[intArray ${node.length}]`;
-  if (Array.isArray(node)) {
-    const items = node.map(x => stringifyNBT(x, indent + 1)).join(',\n');
-    return pad + '[\n' + items + '\n' + pad + ']';
-  }
-  const keys = Object.keys(node);
-  const parts = keys.map(k => pad + '  ' + JSON.stringify(k) + ': ' + stringifyNBT(node[k], indent + 1).trimStart());
-  return pad + '{\n' + parts.join(',\n') + '\n' + pad + '}';
-}
+        if (chests.length === 0) {
+            chestContainer.innerHTML =
+                `<div class="empty-state">No items found in chests</div>`;
+            return;
+        }
 
-// ========== UI wiring ==========
-const drop = document.getElementById('drop');
-const fileInput = document.getElementById('file');
-const statusEl = document.getElementById('status');
+        chests.forEach((chest, cIdx) => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'chest-wrapper';
 
-function setStatus(kind, msg) {
-  statusEl.style.display = 'block';
-  statusEl.className = kind || '';
-  statusEl.textContent = msg;
-}
+            const header = document.createElement('div');
+            header.className = 'chest-header';
+            header.textContent = chest.name;
+            wrapper.appendChild(header);
 
-document.getElementById('browse-btn').addEventListener('click', () => fileInput.click());
+            const grid = document.createElement('div');
+            grid.className = 'chest-grid';
 
-let dragCounter = 0;
-window.addEventListener('dragenter', (e) => {
-  e.preventDefault();
-  if (e.dataTransfer && e.dataTransfer.types.includes('Files')) {
-    dragCounter++;
-    document.getElementById('drop-overlay').classList.add('active');
-  }
-});
-window.addEventListener('dragleave', (e) => {
-  e.preventDefault();
-  dragCounter--;
-  if (dragCounter === 0) {
-    document.getElementById('drop-overlay').classList.remove('active');
-  }
-});
-window.addEventListener('dragover', (e) => { e.preventDefault(); });
-window.addEventListener('drop', (e) => {
-  e.preventDefault();
-  dragCounter = 0;
-  document.getElementById('drop-overlay').classList.remove('active');
-  if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
-});
-fileInput.addEventListener('change', e => { if (e.target.files.length) handleFile(e.target.files[0]); });
+            chest.items.forEach((item, iIdx) => {
+                const slot = document.createElement('div');
+                slot.className = 'chest-slot';
+                const idxInAll = allItems.indexOf(item);
+                slot.dataset.index = String(idxInAll);
 
-async function handleFile(file) {
-  setStatus('', 'Processing ' + file.name + ' …');
-  document.getElementById('output').innerHTML = '';
-  try {
-    const result = await processFile(file);
-    setStatus('ok', '✓ Decompressed successfully (' + result.decompressedBytes.length + ' bytes of NBT).');
-    renderResult(result);
-  } catch (err) {
-    console.error(err);
-    setStatus('err', '✗ ' + (err && err.message ? err.message : String(err)));
-  }
-}
+                // Glint (foil) from NBT tag
+                if (itemHasGlint(item)) {
+                    slot.classList.add('has-glint');
+                }
+
+                // Edited this session
+                if (item.edited || editedPaths.has(item.path)) {
+                    slot.classList.add('edited');
+                    const star = document.createElement('div');
+                    star.className = 'edit-star';
+                    star.textContent = '★';
+                    star.title = 'Edited';
+                    slot.appendChild(star);
+                }
+
+                const icon = document.createElement('img');
+                setItemIcon(icon, item.name);
+                slot.appendChild(icon);
+
+                if (item.count > 1) {
+                    const count = document.createElement('div');
+                    count.className = 'count';
+                    count.textContent = item.count;
+                    slot.appendChild(count);
+                }
+
+                slot.addEventListener('click', (e) => {
+                    const idx = Number(slot.dataset.index);
+                    if (!isNaN(idx) && idx >= 0 && idx < allItems.length) {
+                        openDetail(idx);
+                    }
+                });
+
+                slot.addEventListener('mousemove', (e) => {
+                    const idx = Number(slot.dataset.index);
+                    if (!isNaN(idx) && idx >= 0 && idx < allItems.length) {
+                        showTooltip(e, allItems[idx]);
+                    } else {
+                        hideTooltip();
+                    }
+                });
+                slot.addEventListener('mouseleave', hideTooltip);
+
+                grid.appendChild(slot);
+            });
+
+            wrapper.appendChild(grid);
+            chestContainer.appendChild(wrapper);
+        });
+
+        updateAllButtons();
+    }
+
+    // ========== FILE LOAD / SAVE ==========
+    $('btnOpen').onclick = () => $('fileInput').click();
+
+    $('fileInput').onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        loadingOverlay.classList.add('active');
+
+        try {
+            const buffer = await file.arrayBuffer();
+            fileName = file.name;
+
+            nbtRoot = await NBT.read(buffer, { endian: 'little' });
+
+            editedPaths.clear();
+            const result = extractChests(nbtRoot);
+            chests = result.chests;
+            allItems = result.allItems;
+
+            statusEl.textContent =
+                `LOADED: ${fileName} • ${allItems.length} item(s) in ${chests.length} chest(s)`;
+            $('btnSave').disabled = false;
+            $('btnGlintAll').disabled = false;
+            $('btnKeepAll').disabled = false;
+
+            renderList();
+            
+            // Give the browser a moment to start loading the images before hiding the loader
+            setTimeout(() => {
+                loadingOverlay.classList.remove('active');
+            }, 1200);
+
+        } catch (err) {
+            console.error(err);
+            loadingOverlay.classList.remove('active');
+            alert('Failed to load file:\n' + err.message);
+        }
+    };
+
+    // ========== DRAG AND DROP ==========
+    const dropOverlay = document.getElementById('dropOverlay');
+    let dragCounter = 0;
+
+    // 1. Show overlay when file enters the window
+    document.addEventListener('dragenter', (e) => {
+        e.preventDefault();
+        dragCounter++;
+        if (dragCounter === 1) {
+            dropOverlay.style.display = 'flex';
+        }
+    });
+
+    // 2. Prevent default on dragover so the browser allows dropping
+    document.addEventListener('dragover', (e) => {
+        e.preventDefault();
+    });
+
+    // 3. Only hide overlay when the mouse actually leaves the window
+    document.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dragCounter--;
+        if (dragCounter === 0) {
+            dropOverlay.style.display = 'none';
+        }
+    });
+
+    // 4. Handle the drop
+    document.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dragCounter = 0;
+        dropOverlay.style.display = 'none';
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            const file = files[0];
+            const input = $('fileInput');
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            input.files = dataTransfer.files;
+            input.dispatchEvent(new Event('change'));
+        }
+    });
+
+    // Build the next save name:
+    //  - strips every previous "_edited" and "(n)" suffix
+    //  - bumps the trailing number (temp12 -> temp13, temp -> temp1)
+    //  - never produces parentheses
+    function getNextSaveName(name) {
+        let base = String(name).replace(/ /g, '_');
+
+        const extIndex = base.lastIndexOf('.');
+        let extPart = '';
+        if (extIndex > 0) {
+            extPart = base.substring(extIndex);
+            base = base.substring(0, extIndex);
+        }
+
+        // Remove all trailing "_edited" / "(number)" suffixes, repeatedly
+        let changed = true;
+        while (changed) {
+            changed = false;
+            const stripped = base
+                .replace(/_?\(\s*\d+\s*\)$/i, '')
+                .replace(/_edited$/i, '');
+            if (stripped !== base) {
+                base = stripped;
+                changed = true;
+            }
+        }
+        base = base.replace(/_+$/, '');
+        if (!base) base = 'file';
+
+        // Bump trailing number, or add "1" when there is none
+        const m = base.match(/^(.*?)(\d+)$/);
+        if (m) {
+            const digits = m[2];
+            const next = String(parseInt(digits, 10) + 1);
+            const pad = digits.length > 1 && digits.charAt(0) === '0' ? digits.length : 0;
+            base = m[1] + next.padStart(pad, '0');
+        } else {
+            base = base + '1';
+        }
+
+        return base + extPart;
+    }
+
+    async function doSave() {
+        if (!nbtRoot) return;
+        try {
+            const newFileName = getNextSaveName(fileName);
+
+            const out = await NBT.write(nbtRoot);
+            const blob = new Blob([out], { type: 'application/octet-stream' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = newFileName;
+            a.click();
+            URL.revokeObjectURL(a.href);
+            fileName = newFileName; // keep counting up on the next save
+            statusEl.textContent = `SAVED: ${newFileName}`;
+        } catch (err) {
+            console.error(err);
+            alert('Save failed:\n' + err.message);
+        }
+    }
+
+
+
+    // ========== DETAIL VIEW ==========
+    function renderDetail(idx) {
+        currentIndex = idx;
+        const it = allItems[idx];
+
+        $('detailName').textContent = it.name;
+        const detailIcon = $('detailIcon');
+        detailIcon.style.display = 'block';
+        detailIcon.style.opacity = '1';
+        setItemIcon(detailIcon, it.name);
+        $('detailStatus').textContent = 'EDITING: ' + it.name.replace('minecraft:', '');
+
+        let nameVal = it.displayName || '';
+        let loreVal = '';
+        let keep = false;
+        let glint = false;
+
+        const tag = it.ref.tag?.value || it.ref.tag;
+        if (tag) {
+            const display = tag.display?.value || tag.display;
+            if (display) {
+                nameVal = display.Name?.value ?? display.Name ?? nameVal;
+                const lore = display.Lore?.value ?? display.Lore;
+                if (Array.isArray(lore)) {
+                    // Legacy: list of lines → show as multi-line in the box
+                    loreVal = lore.map(l => (l?.value ?? l)).join('\n');
+                } else if (lore != null && lore !== '') {
+                    // Correct Bedrock style: one string with \n
+                    loreVal = String(lore?.value ?? lore).replace(/\\n/g, '\n');
+                }
+            }
+            if (tag['minecraft:keep_on_death'] !== undefined) keep = true;
+            if (tag.ench) glint = true;
+        }
+
+        // ---- Short Damage (root-level Damage, TAG_Short) ----
+        const rootDamage = it.ref.Damage?.value ?? it.ref.Damage;
+        const hasShortDamage = rootDamage !== undefined && rootDamage !== null;
+        $('shortDamageCheck').checked = hasShortDamage;
+        $('shortDamageInput').value = hasShortDamage ? String(rootDamage) : '6767';
+        $('shortDamageInputWrap').style.display = hasShortDamage ? 'block' : 'none';
+
+        // ---- Unbreakable (tools / armor only) ----
+        const unbreakableVal = tag?.Unbreakable?.value ?? tag?.Unbreakable;
+        const showUnbreakable = isToolOrArmor(it.name);
+        $('unbreakableFlag').style.display = showUnbreakable ? 'flex' : 'none';
+        $('unbreakableCheck').checked = showUnbreakable ? !!unbreakableVal : false;
+
+        $('nameInput').value = nameVal;
+        $('loreInput').value = loreVal;
+        
+        // Auto-resize both inputs to fit the loaded text immediately
+        autoResize($('nameInput'));
+        autoResize($('loreInput'));
+
+        $('keepCheck').checked = keep;
+        $('glintCheck').checked = glint;
+        updatePreview();
+        updateDetailGlint();
+
+        $('listScreen').classList.add('hidden');
+        $('detailScreen').classList.add('active');
+    }
+
+    function updateDetailGlint() {
+        const wrap = $('detailIconWrap');
+        if (!wrap) return;
+        if ($('glintCheck').checked) {
+            wrap.classList.add('has-glint');
+        } else {
+            wrap.classList.remove('has-glint');
+        }
+    }
+
+    // ========== APPLY CHANGES ==========
+    function applyChanges() {
+        if (currentIndex < 0 || !allItems[currentIndex]) return;
+        const it = allItems[currentIndex];
+        const item = it.ref;
+
+        // Ensure tag structure exists
+        if (!item.tag) item.tag = {};
+        let tag = item.tag.value || item.tag;
+
+        if (!tag.display) tag.display = {};
+        let display = tag.display.value || tag.display;
+
+        const newName = $('nameInput').value.trim();
+        if (newName) {
+            display.Name = newName;
+        } else {
+            delete display.Name;
+        }
+
+        let loreText = $('loreInput').value.trim();
+        if (loreText) {
+            // Bedrock collapses completely empty lines in tooltips.
+            // Insert a space into empty lines so the game renders the gap.
+            loreText = loreText.replace(/\n\s*\n/g, '\n \n');
+
+            // Bedrock requires Lore to be a LIST of strings
+            // (even when it’s only one string that contains \n)
+            display.Lore = [loreText];
+        } else {
+            delete display.Lore;
+        }
+
+        if ($('keepCheck').checked) {
+            tag['minecraft:keep_on_death'] = new NBT.Int8(1);
+        } else {
+            delete tag['minecraft:keep_on_death'];
+        }
+
+        if ($('glintCheck').checked) {
+            if (!tag.ench) tag.ench = [];
+            // If empty, add a dummy enchant so glint shows
+            // nbtify uses Int16 for short tags (there is no NBT.Short)
+            if (Array.isArray(tag.ench) && tag.ench.length === 0) {
+                tag.ench.push({ id: new NBT.Int16(-1), lvl: new NBT.Int16(0) });
+            }
+        } else {
+            delete tag.ench;
+        }
+
+        // ---- Short Damage tag at the ROOT of the item stack (TAG_Short) ----
+        // This is the hidden background tag, NOT the int tag.Damage durability value.
+        if ($('shortDamageCheck').checked) {
+            let num = parseInt(String($('shortDamageInput').value).trim(), 10);
+            if (!Number.isFinite(num)) num = 6767;
+            num = Math.max(-32768, Math.min(32767, num));
+            item.Damage = new NBT.Int16(num);
+        } else {
+            delete item.Damage;
+        }
+
+        // ---- Unbreakable (only written when the flag is actually visible) ----
+        // Hidden for non tool/armor, so we never touch Unbreakable on those items.
+        if ($('unbreakableFlag').style.display !== 'none') {
+            if ($('unbreakableCheck').checked) {
+                tag.Unbreakable = new NBT.Int8(1);
+            } else {
+                delete tag.Unbreakable;
+            }
+        }
+
+        // Update displayName for tooltip
+        it.displayName = newName;
+
+        // Mark as edited this session (star + outline in list)
+        it.edited = true;
+        if (it.path) editedPaths.add(it.path);
+
+        // Re-render list so tooltips / glint / star stay in sync
+        renderList();
+    }
+
+    async function applyAndSave() {
+        applyChanges();
+        await doSave();
+    }
+
+    // ========== HISTORY & NAVIGATION ==========
+    
+    // Initialize the base history state on load
+    history.replaceState({ screen: 'list' }, '');
+
+    function openDetail(idx) {
+        renderDetail(idx);
+        history.pushState({ screen: 'detail', index: idx }, '');
+    }
+
+    function goBack() {
+        history.back();
+    }
+
+    // Listen for native back/forward (Mouse side buttons, Alt+Left/Right, browser UI)
+    window.addEventListener('popstate', (e) => {
+        if (e.state && e.state.screen === 'detail') {
+            // Forward button clicked: Re-open the item
+            renderDetail(e.state.index);
+        } else {
+            // Back button clicked: Save changes and go back to list
+            try {
+                applyChanges();
+            } catch (err) {
+                console.error('applyChanges failed on back:', err);
+            }
+            $('detailScreen').classList.remove('active');
+            $('listScreen').classList.remove('hidden');
+        }
+    });
+
+    $('btnBack').onclick = goBack;
+
+    // ========== GLOBAL TOGGLE: GLINT FOR ALL ITEMS ==========
+    function toggleGlintAll() {
+        if (!allItems.length) return;
+
+        // If every item already has glint, remove from all; otherwise add to all
+        const allHave = allItems.every(it => {
+            const tag = it.ref.tag?.value || it.ref.tag;
+            return tag && tag.ench !== undefined && tag.ench !== null;
+        });
+
+        allItems.forEach(it => {
+            const item = it.ref;
+            if (!item.tag) item.tag = {};
+            let tag = item.tag.value || item.tag;
+
+            if (allHave) {
+                delete tag.ench;
+            } else {
+                if (!tag.ench) tag.ench = [];
+                if (Array.isArray(tag.ench) && tag.ench.length === 0) {
+                    tag.ench.push({ id: new NBT.Int16(-1), lvl: new NBT.Int16(0) });
+                }
+            }
+
+            it.edited = true;
+            if (it.path) editedPaths.add(it.path);
+        });
+
+        renderList();
+        statusEl.textContent = allHave
+            ? 'GLINT REMOVED FROM ALL ITEMS'
+            : 'GLINT APPLIED TO ALL ITEMS';
+    }
+
+    // ========== GLOBAL TOGGLE: KEEP ON DEATH FOR ALL ITEMS ==========
+    function toggleKeepAll() {
+        if (!allItems.length) return;
+
+        // If every item already has keep_on_death, remove from all; otherwise add to all
+        const allHave = allItems.every(it => {
+            const tag = it.ref.tag?.value || it.ref.tag;
+            return tag && tag['minecraft:keep_on_death'] !== undefined;
+        });
+
+        allItems.forEach(it => {
+            const item = it.ref;
+            if (!item.tag) item.tag = {};
+            let tag = item.tag.value || item.tag;
+
+            if (allHave) {
+                delete tag['minecraft:keep_on_death'];
+            } else {
+                tag['minecraft:keep_on_death'] = new NBT.Int8(1);
+            }
+
+            it.edited = true;
+            if (it.path) editedPaths.add(it.path);
+        });
+
+        renderList();
+        statusEl.textContent = allHave
+            ? 'KEEP ON DEATH REMOVED FROM ALL ITEMS'
+            : 'KEEP ON DEATH APPLIED TO ALL ITEMS';
+    }
+
+    // ========== UPDATE GLOBAL BUTTON LABELS FROM CURRENT STATE ==========
+    function updateAllButtons() {
+        const glintAll = allItems.length > 0 && allItems.every(it => {
+            const tag = it.ref.tag?.value || it.ref.tag;
+            return tag && tag.ench !== undefined && tag.ench !== null;
+        });
+        const keepAll = allItems.length > 0 && allItems.every(it => {
+            const tag = it.ref.tag?.value || it.ref.tag;
+            return tag && tag['minecraft:keep_on_death'] !== undefined;
+        });
+        const gBtn = $('btnGlintAll');
+        const kBtn = $('btnKeepAll');
+        if (gBtn) gBtn.textContent = glintAll ? 'GLINT: ON' : 'GLINT: OFF';
+        if (kBtn) kBtn.textContent = keepAll ? 'KEEP: ON' : 'KEEP: OFF';
+    }
+
+    // ========== BUTTON BINDINGS ==========
+    $('btnGlintAll').onclick = toggleGlintAll;
+    $('btnKeepAll').onclick = toggleKeepAll;
+    $('btnSave').onclick = applyAndSave;
+
+    // 'btnClearLore' removed per user request
+
+    // Also apply when checkboxes change (so tooltip stays fresh)
+    $('keepCheck').onchange = () => { applyChanges(); updatePreview(); };
+    $('glintCheck').onchange = () => { applyChanges(); updateDetailGlint(); };
+
+    // Short Damage: toggle the hidden input box, then apply
+    $('shortDamageCheck').onchange = () => {
+        $('shortDamageInputWrap').style.display = $('shortDamageCheck').checked ? 'block' : 'none';
+        applyChanges();
+    };
+
+    // Unbreakable (only relevant when the flag is visible)
+    $('unbreakableCheck').onchange = () => { applyChanges(); };
+
+    // Apply on name/lore input with a small delay (debounce)
+    let applyTimer = null;
+    $('nameInput').addEventListener('input', () => {
+        updatePreview();
+        clearTimeout(applyTimer);
+        applyTimer = setTimeout(applyChanges, 300);
+    });
+    $('loreInput').addEventListener('input', () => {
+        autoResize($('loreInput'));
+        updatePreview();
+        clearTimeout(applyTimer);
+        applyTimer = setTimeout(applyChanges, 300);
+    });
+    $('shortDamageInput').addEventListener('input', () => {
+        clearTimeout(applyTimer);
+        applyTimer = setTimeout(applyChanges, 300);
+    });
+
+    // Ripple effect on all buttons
+    document.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            if (this.disabled) return;
+            const ripple = document.createElement('span');
+            ripple.className = 'ripple';
+            const rect = this.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+            ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+            this.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 550);
+        });
+    });
+
+    // ========== KEYBOARD SHORTCUT: ESC to go back ==========
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && $('detailScreen').classList.contains('active')) {
+            goBack();
+        }
+    });
+
+    console.log('✦ Bedrock .mcstructure Item Editor loaded ✦');
+    console.log('• Tooltips now show for ALL items (even without lore/custom name)');
+    console.log('• Changes auto-save when you go BACK (ESC or click ←)');
+    console.log('• Tooltips update live with your edits');
+    console.log('• "Chest 1" bug fixed — block_palette is skipped');
 </script>
 </body>
 </html>
