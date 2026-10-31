@@ -1,0 +1,1724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SNBT Editor</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2360a5fa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z'/%3E%3Cpolyline points='3.27 6.96 12 12.01 20.73 6.96'/%3E%3Cline x1='12' y1='22.08' x2='12' y2='12'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #0f111a;
+    --bg2: #161824;
+    --panel: #1e2132;
+    --panel-2: #272a3d;
+    --border: #33364d;
+    --border-strong: #484c6b;
+    --text: #ffffff;
+    --text-dim: #d1d5db;
+    --muted: #9ca3af;
+    --accent: #60a5fa;
+    --accent-hover: #93c5fd;
+    --accent-soft: rgba(96,165,250,0.15);
+    --ok: #4ade80;
+    --ok-soft: rgba(74,222,128,0.15);
+    --err: #f87171;
+    --err-soft: rgba(248,113,113,0.15);
+    --warn: #fbbf24;
+    --warn-soft: rgba(251,191,36,0.15);
+    --radius: 10px;
+    --radius-sm: 7px;
+    --shadow: 0 4px 6px -1px rgba(0,0,0,0.4), 0 2px 4px -1px rgba(0,0,0,0.3);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0 auto;
+    padding: 28px 20px 60px;
+    max-width: 1100px;
+    font-family: ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  h1 {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
+  h1 > svg { width: 26px; height: 26px; color: var(--accent); flex: none; }
+  .sub { color: var(--muted); margin: 0 0 22px; font-size: 13px; max-width: 780px; }
+  .sub code {
+    background: var(--panel-2);
+    color: var(--text-dim);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+  }
+
+  #drop {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 40px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-dim);
+    background: var(--bg2);
+  }
+  #drop:hover, #drop.over {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent-hover);
+  }
+  .drop-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--panel);
+    margin-bottom: 12px;
+    color: var(--accent);
+    transition: all 0.2s ease;
+  }
+  .drop-icon svg { width: 28px; height: 28px; }
+  #drop:hover .drop-icon, #drop.over .drop-icon { background: var(--accent); color: var(--bg); }
+  .drop-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  #drop:hover .drop-title, #drop.over .drop-title { color: var(--accent-hover); }
+  .drop-sub { font-size: 12px; color: var(--muted); }
+
+  #status {
+    margin-top: 14px;
+    padding: 11px 14px;
+    border-radius: var(--radius-sm);
+    background: var(--panel);
+    border: 1px solid var(--border);
+    display: none;
+    font-size: 13px;
+  }
+  #status.ok { border-color: var(--ok); background: var(--ok-soft); color: #bbf7d0; }
+  #status.err { border-color: var(--err); background: var(--err-soft); color: #fecaca; }
+  #status.warn { border-color: var(--warn); background: var(--warn-soft); color: #fde68a; }
+
+  #output { margin-top: 20px; }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+  }
+  .panel h2 {
+    font-size: 12px;
+    font-weight: 600;
+    margin: 0 0 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .kv { display: grid; grid-template-columns: max-content 1fr; gap: 6px 20px; font-size: 13px; }
+  .kv .k { color: var(--muted); }
+
+  .btn-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-strong);
+    background: var(--panel-2);
+    color: var(--text);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-hover); }
+  .btn:active { transform: translateY(1px); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #0a1020; }
+  .btn.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: #0a1020; }
+  .btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+  .snbt-editor {
+    width: 100%;
+    min-height: 320px;
+    max-height: 640px;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    color: var(--text);
+    font: inherit;
+    font-size: 12px;
+    line-height: 1.55;
+    resize: vertical;
+    tab-size: 4;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .snbt-editor:focus { border-color: var(--accent); }
+  .snbt-editor.dirty { border-color: var(--warn); }
+
+  .palette { display: flex; flex-direction: column; gap: 2px; font-size: 12px; }
+  .palette .row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 6px;
+    border-radius: 4px;
+  }
+  .palette .row:hover { background: var(--panel-2); }
+  .palette .swatch { width: 16px; height: 16px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.15); flex: none; }
+  .palette .idx { color: var(--muted); min-width: 28px; text-align: right; font-size: 11px; }
+  .palette .states { color: var(--muted); font-size: 11px; }
+
+  .slices { display: flex; flex-wrap: wrap; gap: 12px; }
+  .slice { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; }
+  .slice h3 {
+    font-size: 11px;
+    margin: 0 0 8px;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .grid { display: grid; gap: 2px; }
+  .cell {
+    width: 26px; height: 26px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    cursor: help;
+  }
+  .cell.empty {
+    background: repeating-linear-gradient(45deg, #20212c, #20212c 4px, #1a1b23 4px, #1a1b23 8px);
+    color: var(--muted);
+  }
+
+  pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-all;
+    font-size: 12px;
+    max-height: 400px;
+    overflow: auto;
+    padding: 10px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+
+  details summary { cursor: pointer; color: var(--muted); font-size: 12px; padding: 6px 0; user-select: none; }
+  details summary:hover { color: var(--text-dim); }
+  details[open] summary { margin-bottom: 6px; }
+
+  .note { color: var(--muted); font-size: 12px; margin-top: 6px; margin-bottom: 10px; }
+  .note.warn { color: var(--warn); }
+
+  .drop-overlay {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(15, 17, 26, 0.85); backdrop-filter: blur(6px);
+    display: none; align-items: center; justify-content: center;
+    z-index: 9999; pointer-events: none;
+  }
+  .drop-overlay.active { display: flex; }
+  .drop-overlay-content {
+    border: 3px dashed var(--accent); border-radius: var(--radius);
+    padding: 50px 80px; text-align: center; background: var(--panel);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6); pointer-events: auto;
+    animation: pulse-border 2s infinite;
+  }
+  @keyframes pulse-border {
+    0% { border-color: var(--accent); }
+    50% { border-color: var(--accent-hover); }
+    100% { border-color: var(--accent); }
+  }
+</style>
+</head>
+<body>
+<h1>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+    <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+    <line x1="12" y1="22.08" x2="12" y2="12"/>
+  </svg>
+  <span>Bedrock .mcstructure Viewer / Editor</span>
+</h1>
+<div class="sub">Drop a Bedrock <code>.mcstructure</code> file (binary NBT), or the JSON export from another tool. Edit the SNBT, then download a fresh <code>.mcstructure</code>. Everything runs locally in your browser.</div>
+<div style="margin-bottom: 20px;">
+  <button class="btn primary" id="browse-btn" style="padding: 12px 20px; font-size: 14px;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width: 18px; height: 18px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    <span>Open .mcstructure file</span>
+  </button>
+</div>
+
+<div id="drop-overlay" class="drop-overlay">
+  <div class="drop-overlay-content">
+    <div class="drop-icon" style="width: 80px; height: 80px; margin-bottom: 20px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width: 40px; height: 40px;">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/>
+        <line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+    </div>
+    <div class="drop-title" style="font-size: 20px; margin-bottom: 8px;">Drop your .mcstructure file</div>
+    <div class="drop-sub" style="font-size: 14px;">Release to load</div>
+  </div>
+</div>
+
+<input type="file" id="file" accept=".mcstructure,.nbt,.json,.txt" hidden>
+<div id="status"></div>
+<div id="output"></div>
+
+<script>
+// ========== NBT reader (little-endian, Bedrock) ==========
+class NBTReader {
+  constructor(bytes, le = true) {
+    this.bytes = bytes;
+    this.view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    this.le = le;
+    this.pos = 0;
+  }
+  u8()  { const v = this.view.getUint8(this.pos); this.pos += 1; return v; }
+  i8()  { const v = this.view.getInt8(this.pos);  this.pos += 1; return v; }
+  u16() { const v = this.view.getUint16(this.pos, this.le); this.pos += 2; return v; }
+  i16() { const v = this.view.getInt16(this.pos, this.le);  this.pos += 2; return v; }
+  i32() { const v = this.view.getInt32(this.pos, this.le);  this.pos += 4; return v; }
+  i64() { const v = this.view.getBigInt64(this.pos, this.le); this.pos += 8; return v; }
+  f32() { const v = this.view.getFloat32(this.pos, this.le); this.pos += 4; return v; }
+  f64() { const v = this.view.getFloat64(this.pos, this.le); this.pos += 8; return v; }
+  str(len) {
+    const s = new TextDecoder('utf-8').decode(this.bytes.subarray(this.pos, this.pos + len));
+    this.pos += len;
+    return s;
+  }
+  readName() { return this.str(this.u16()); }
+  readPayload(type) {
+    switch (type) {
+      case 1: return this.i8();
+      case 2: return this.i16();
+      case 3: return this.i32();
+      case 4: return this.i64();
+      case 5: return this.f32();
+      case 6: return this.f64();
+      case 7: {
+        const len = this.i32();
+        if (len < 0) throw new Error('Negative byte array length: ' + len);
+        const arr = new Int8Array(len);
+        for (let i = 0; i < len; i++) arr[i] = this.i8();
+        return arr;
+      }
+      case 8: return this.str(this.u16());
+      case 9: {
+        const elemType = this.u8();
+        const len = this.i32();
+        if (len < 0) throw new Error('Negative list length: ' + len);
+        const arr = new Array(len);
+        for (let i = 0; i < len; i++) arr[i] = this.readPayload(elemType);
+        arr._nbtType = elemType;
+        return arr;
+      }
+      case 10: {
+        const obj = {};
+        while (true) {
+          const t = this.u8();
+          if (t === 0) break;
+          const name = this.readName();
+          obj[name] = this.readPayload(t);
+        }
+        return obj;
+      }
+      case 11: {
+        const len = this.i32();
+        if (len < 0) throw new Error('Negative int array length: ' + len);
+        const arr = new Int32Array(len);
+        for (let i = 0; i < len; i++) arr[i] = this.i32();
+        return arr;
+      }
+      case 12: {
+        const len = this.i32();
+        if (len < 0) throw new Error('Negative long array length: ' + len);
+        const arr = new Array(len);
+        for (let i = 0; i < len; i++) arr[i] = this.i64();
+        return arr;
+      }
+      default:
+        throw new Error('Unknown NBT tag type: ' + type + ' at offset ' + (this.pos - 1));
+    }
+  }
+  readRoot() {
+    const type = this.u8();
+    if (type === 0) return null;
+    const name = this.readName();
+    const value = this.readPayload(type);
+    return { type, name, value };
+  }
+}
+
+// ========== NBT writer (little-endian) ==========
+class NBTWriter {
+  constructor(le = true) { this.le = le; this.chunks = []; }
+  push(u8) { this.chunks.push(u8); }
+  u8(v)  { this.push(new Uint8Array([v & 0xFF])); }
+  i8(v)  { this.push(new Uint8Array([v & 0xFF])); }
+  u16(v) { const b = new Uint8Array(2); new DataView(b.buffer).setUint16(0, v, this.le); this.push(b); }
+  i16(v) { const b = new Uint8Array(2); new DataView(b.buffer).setInt16(0, v, this.le); this.push(b); }
+  i32(v) { const b = new Uint8Array(4); new DataView(b.buffer).setInt32(0, v, this.le); this.push(b); }
+  i64(v) { const b = new Uint8Array(8); new DataView(b.buffer).setBigInt64(0, BigInt(v), this.le); this.push(b); }
+  f32(v) { const b = new Uint8Array(4); new DataView(b.buffer).setFloat32(0, v, this.le); this.push(b); }
+  f64(v) { const b = new Uint8Array(8); new DataView(b.buffer).setFloat64(0, v, this.le); this.push(b); }
+  str(s) {
+    const enc = new TextEncoder().encode(s);
+    this.u16(enc.length);
+    this.push(enc);
+  }
+  finish() {
+    const total = this.chunks.reduce((s, c) => s + c.length, 0);
+    const out = new Uint8Array(total);
+    let off = 0;
+    for (const c of this.chunks) { out.set(c, off); off += c.length; }
+    return out;
+  }
+}
+
+// ========== SNBT parser ==========
+function parseSNBT(text) {
+  let pos = 0;
+  const len = text.length;
+
+  function skipWs() {
+    while (pos < len) {
+      const c = text[pos];
+      if (c === ' ' || c === '\t' || c === '\n' || c === '\r') { pos++; continue; }
+      // Comments: // to end of line
+      if (c === '/' && text[pos + 1] === '/') {
+        while (pos < len && text[pos] !== '\n') pos++;
+        continue;
+      }
+      break;
+    }
+  }
+
+  function error(msg) {
+    const snippet = text.slice(Math.max(0, pos - 30), pos + 30).replace(/\n/g, '\\n');
+    throw new Error(`SNBT parse error at position ${pos}: ${msg} — near "${snippet}"`);
+  }
+
+  function parseValue() {
+    skipWs();
+    if (pos >= len) error('unexpected end of input');
+    const c = text[pos];
+    if (c === '{') return parseCompound();
+    if (c === '[') return parseListOrArray();
+    if (c === '"' || c === "'") return parseString();
+    if (c === '-' || c === '+' || (c >= '0' && c <= '9') || c === '.') return parseNumber();
+    // Unquoted identifier (true/false/null or bare string)
+    if (/[a-zA-Z_]/.test(c)) {
+      let start = pos;
+      while (pos < len && /[a-zA-Z0-9_\-+.:]/.test(text[pos])) pos++;
+      const s = text.slice(start, pos);
+      if (s === 'true') return { type: 'byte', value: 1 };
+      if (s === 'false') return { type: 'byte', value: 0 };
+      if (s === 'null') return null;
+      return { type: 'string', value: s };
+    }
+    error(`unexpected character '${c}'`);
+  }
+
+  function parseString() {
+    const quote = text[pos];
+    pos++;
+    let s = '';
+    while (pos < len) {
+      const c = text[pos];
+      if (c === '\\') {
+        const next = text[pos + 1];
+        if (next === 'n') s += '\n';
+        else if (next === 't') s += '\t';
+        else if (next === 'r') s += '\r';
+        else if (next === '\\') s += '\\';
+        else if (next === '"') s += '"';
+        else if (next === "'") s += "'";
+        else s += next;
+        pos += 2;
+      } else if (c === quote) {
+        pos++;
+        return { type: 'string', value: s };
+      } else {
+        s += c;
+        pos++;
+      }
+    }
+    error('unterminated string');
+  }
+
+  function parseNumber() {
+    const start = pos;
+    if (text[pos] === '-' || text[pos] === '+') pos++;
+    while (pos < len && /[0-9]/.test(text[pos])) pos++;
+    let isFloat = false;
+    if (text[pos] === '.') {
+      isFloat = true; pos++;
+      while (pos < len && /[0-9]/.test(text[pos])) pos++;
+    }
+    if (text[pos] === 'e' || text[pos] === 'E') {
+      isFloat = true; pos++;
+      if (text[pos] === '+' || text[pos] === '-') pos++;
+      while (pos < len && /[0-9]/.test(text[pos])) pos++;
+    }
+    let suffix = '';
+    if (pos < len && /[bsLfd]/.test(text[pos])) { suffix = text[pos]; pos++; }
+    const numStr = text.slice(start, suffix ? pos - 1 : pos);
+    let value;
+    let type = 'int';
+    if (suffix === 'b') type = 'byte';
+    else if (suffix === 's') type = 'short';
+    else if (suffix === 'L') type = 'long';
+    else if (suffix === 'f') type = 'float';
+    else if (suffix === 'd') type = 'double';
+    else if (isFloat) type = 'double';
+    if (type === 'long') {
+      try { value = BigInt(numStr); } catch { value = Number(numStr); }
+    } else {
+      value = isFloat ? parseFloat(numStr) : parseInt(numStr, 10);
+    }
+    return { type, value };
+  }
+
+  function parseCompound() {
+    pos++; // {
+    const obj = {};
+    skipWs();
+    if (text[pos] === '}') { pos++; return { type: 'compound', value: obj }; }
+    while (true) {
+      skipWs();
+      let key;
+      if (text[pos] === '"' || text[pos] === "'") {
+        key = parseString().value;
+      } else {
+        const start = pos;
+        while (pos < len && /[a-zA-Z0-9_\-+.]/.test(text[pos])) pos++;
+        if (pos === start) error('expected key');
+        key = text.slice(start, pos);
+      }
+      skipWs();
+      if (text[pos] !== ':') error(`expected ':' but got '${text[pos]}'`);
+      pos++;
+      const val = parseValue();
+      obj[key] = val;
+      skipWs();
+      if (text[pos] === ',') { pos++; continue; }
+      if (text[pos] === '}') { pos++; return { type: 'compound', value: obj }; }
+      error(`expected ',' or '}' but got '${text[pos]}'`);
+    }
+  }
+
+  function parseListOrArray() {
+    pos++; // [
+    skipWs();
+    if (text[pos] === 'B' && text[pos + 1] === ';') {
+      pos += 2;
+      return parseTypedArray('byte');
+    }
+    if (text[pos] === 'I' && text[pos + 1] === ';') {
+      pos += 2;
+      return parseTypedArray('int');
+    }
+    if (text[pos] === 'L' && text[pos + 1] === ';') {
+      pos += 2;
+      return parseTypedArray('long');
+    }
+    const items = [];
+    skipWs();
+    if (text[pos] === ']') { pos++; return { type: 'list', value: items }; }
+    while (true) {
+      items.push(parseValue());
+      skipWs();
+      if (text[pos] === ',') { pos++; skipWs(); if (text[pos] === ']') { pos++; return { type: 'list', value: items }; } continue; }
+      if (text[pos] === ']') { pos++; return { type: 'list', value: items }; }
+      error(`expected ',' or ']' but got '${text[pos]}'`);
+    }
+  }
+
+  function parseTypedArray(elemType) {
+    const items = [];
+    skipWs();
+    if (text[pos] === ']') { pos++; return { type: elemType + 'Array', value: items }; }
+    while (true) {
+      const v = parseNumber();
+      items.push({ type: elemType, value: v.value });
+      skipWs();
+      if (text[pos] === ',') { pos++; skipWs(); if (text[pos] === ']') { pos++; return { type: elemType + 'Array', value: items }; } continue; }
+      if (text[pos] === ']') { pos++; return { type: elemType + 'Array', value: items }; }
+      error(`expected ',' or ']' but got '${text[pos]}'`);
+    }
+  }
+
+  const result = parseValue();
+  skipWs();
+  if (pos < len) error('unexpected trailing content');
+  return result;
+}
+
+// ========== NBT serializer from parsed SNBT tree ==========
+const TYPE_ID = {
+  byte: 1, short: 2, int: 3, long: 4, float: 5, double: 6,
+  byteArray: 7, string: 8, list: 9, compound: 10, intArray: 11, longArray: 12
+};
+
+function serializeNBTNode(node) {
+  if (!node || node.type !== 'compound') {
+    throw new Error('serializeNBTNode: root must be a compound, got ' + (node && node.type));
+  }
+  const w = new NBTWriter(true);
+  w.u8(10); w.u16(0); // root compound, empty name
+  for (const [k, v] of Object.entries(node.value)) {
+    writeTag(w, k, v);
+  }
+  w.u8(0); // end root
+  return w.finish();
+}
+
+function writeTag(w, name, node) {
+  if (node == null) throw new Error(`Null value for key "${name}"`);
+  const tid = TYPE_ID[node.type];
+  if (!tid) throw new Error(`Unknown type "${node.type}" for key "${name}"`);
+  w.u8(tid);
+  w.str(name);
+  writeTagValue(w, node);
+}
+
+function writeTagValue(w, node) {
+  switch (node.type) {
+    case 'byte': w.i8(node.value); break;
+    case 'short': w.i16(node.value); break;
+    case 'int': w.i32(node.value); break;
+    case 'long': w.i64(node.value); break;
+    case 'float': w.f32(node.value); break;
+    case 'double': w.f64(node.value); break;
+    case 'string': w.str(node.value); break;
+    case 'byteArray':
+      w.i32(node.value.length);
+      for (const v of node.value) w.i8(v.value);
+      break;
+    case 'intArray':
+      w.i32(node.value.length);
+      for (const v of node.value) w.i32(v.value);
+      break;
+    case 'longArray':
+      w.i32(node.value.length);
+      for (const v of node.value) w.i64(v.value);
+      break;
+    case 'list': {
+      if (node.value.length === 0) {
+        w.u8(0);
+        w.i32(0);
+      } else {
+        let expectedType = node.value[0].type;
+        if (['byte', 'short', 'int', 'long', 'float', 'double'].includes(expectedType)) {
+          let type = expectedType;
+          for (const v of node.value) {
+            if (v.type === 'double') type = 'double';
+            else if (v.type === 'float' && type !== 'double') type = 'float';
+            else if (v.type === 'long' && type !== 'double' && type !== 'float') type = 'long';
+            else if (v.type === 'int' && type !== 'double' && type !== 'float' && type !== 'long') type = 'int';
+            else if (v.type === 'short' && type !== 'double' && type !== 'float' && type !== 'long' && type !== 'int') type = 'short';
+          }
+          w.u8(TYPE_ID[type]);
+          w.i32(node.value.length);
+          for (const v of node.value) {
+            if (type === 'double') w.f64(Number(v.value));
+            else if (type === 'float') w.f32(Number(v.value));
+            else if (type === 'long') w.i64(v.value);
+            else if (type === 'int') w.i32(Number(v.value));
+            else if (type === 'short') w.i16(Number(v.value));
+            else if (type === 'byte') w.i8(Number(v.value));
+          }
+        } else {
+          w.u8(TYPE_ID[expectedType]);
+          w.i32(node.value.length);
+          for (const v of node.value) writeTagValue(w, v);
+        }
+      }
+      break;
+    }
+    case 'compound':
+      for (const [k, v] of Object.entries(node.value)) {
+        writeTag(w, k, v);
+      }
+      w.u8(0);
+      break;
+    default:
+      throw new Error('Unknown type: ' + node.type);
+  }
+}
+
+// ========== Decompression ==========
+async function decompressBytes(bytes, format) {
+  if (typeof DecompressionStream === 'undefined') {
+    throw new Error('Your browser lacks DecompressionStream. Use Chrome/Edge/Firefox, or Safari 16.4+.');
+  }
+  let ds;
+  if (format === 'gzip') ds = new DecompressionStream('gzip');
+  else if (format === 'zlib') ds = new DecompressionStream('deflate');
+  else if (format === 'raw')  ds = new DecompressionStream('deflate-raw');
+  else throw new Error('Unknown compression format: ' + format);
+  const stream = new Blob([bytes]).stream().pipeThrough(ds);
+  const buf = await new Response(stream).arrayBuffer();
+  return new Uint8Array(buf);
+}
+
+async function compressBytes(bytes, format) {
+  if (typeof CompressionStream === 'undefined') {
+    throw new Error('Your browser lacks CompressionStream. Use Chrome/Edge/Firefox, or Safari 16.4+.');
+  }
+  let cs;
+  if (format === 'gzip') cs = new CompressionStream('gzip');
+  else if (format === 'zlib') cs = new CompressionStream('deflate');
+  else if (format === 'raw')  cs = new CompressionStream('deflate-raw');
+  else throw new Error('Unknown compression format: ' + format);
+  const stream = new Blob([bytes]).stream().pipeThrough(cs);
+  const buf = await new Response(stream).arrayBuffer();
+  return new Uint8Array(buf);
+}
+
+function detectCompression(bytes) {
+  if (bytes.length < 2) return null;
+  if (bytes[0] === 0x1F && bytes[1] === 0x8B) return 'gzip';
+  if (bytes[0] === 0x78 && [0x01, 0x5E, 0x9C, 0xDA].includes(bytes[1])) return 'zlib';
+  return null;
+}
+
+async function tryDecompress(bytes, formats) {
+  let lastErr;
+  for (const fmt of formats) {
+    try {
+      const out = await decompressBytes(bytes, fmt);
+      if (out.length > 0) return { data: out, format: fmt };
+    } catch (e) { lastErr = e; }
+  }
+  throw lastErr || new Error('All decompression attempts failed');
+}
+
+// ========== Byte helpers ==========
+function toUint8Array(arr) {
+  if (arr instanceof Uint8Array) return arr;
+  if (arr instanceof Int8Array) return new Uint8Array(arr.buffer, arr.byteOffset, arr.byteLength);
+  if (Array.isArray(arr) || ArrayBuffer.isView(arr)) {
+    const out = new Uint8Array(arr.length);
+    for (let i = 0; i < arr.length; i++) out[i] = arr[i] & 0xFF;
+    return out;
+  }
+  throw new Error('Cannot convert value to bytes');
+}
+
+// ========== File processing ==========
+async function processFile(file) {
+  const buf = await file.arrayBuffer();
+  let bytes = new Uint8Array(buf);
+
+  if (detectCompression(bytes) === 'gzip') {
+    bytes = await decompressBytes(bytes, 'gzip');
+  }
+
+  let firstNonWs = -1;
+  for (let i = 0; i < Math.min(bytes.length, 200); i++) {
+    const b = bytes[i];
+    if (b !== 0x20 && b !== 0x09 && b !== 0x0A && b !== 0x0D) { firstNonWs = i; break; }
+  }
+  if (firstNonWs >= 0 && bytes[firstNonWs] === 0x7B /* { */) {
+    let json;
+    try { json = JSON.parse(new TextDecoder().decode(bytes)); }
+    catch (e) {
+      // Could be SNBT, not JSON. Try parsing it as SNBT.
+      try {
+        const tree = parseSNBT(new TextDecoder().decode(bytes));
+        return await processSNBT(tree, file.name);
+      } catch (e2) {
+        throw new Error('File looks like JSON but failed to parse: ' + e.message);
+      }
+    }
+    return await processJSON(json, file.name);
+  }
+
+  if (bytes[0] !== 0x0A && detectCompression(bytes) === 'zlib') {
+    try {
+      const un = await decompressBytes(bytes, 'zlib');
+      if (un[0] === 0x0A) bytes = un;
+    } catch (e) { /* fall through */ }
+  }
+  if (bytes[0] !== 0x0A) {
+    throw new Error('Not a recognized NBT file (first byte = 0x' + bytes[0].toString(16) + ')');
+  }
+  const reader = new NBTReader(bytes, true);
+  const root = reader.readRoot();
+  return await processNBT(root, file.name);
+}
+
+async function processSNBT(tree, fileName) {
+  if (!tree || tree.type !== 'compound') throw new Error('SNBT root must be a compound');
+  const v = tree.value;
+  const size = v.size && v.size.value ? v.size.value.map(x => x.value) : undefined;
+  const format_version = v.format_version ? v.format_version.value : undefined;
+  const compressionFlag = v.compression ? v.compression.value : undefined;
+  const origin = v.structure_world_origin ? v.structure_world_origin.value.map(x => x.value) : undefined;
+  const structureNode = v.structure;
+  if (!structureNode || structureNode.type !== 'compound') {
+    // Maybe the whole thing is the structure itself (no wrapper)
+    if (v.palette || v.block_indices) {
+      const innerBytes = serializeNBTNode(tree);
+      return await finalizeResult({ size, format_version, compressionFlag, origin, innerBytes, fileName, rawRoot: v });
+    }
+    throw new Error('Missing `structure` compound in SNBT');
+  }
+  const innerBytes = serializeNBTNode(structureNode);
+  return await finalizeResult({ size, format_version, compressionFlag, origin, innerBytes, fileName, rawRoot: v });
+}
+
+async function processJSON(json, fileName) {
+  let v = null;
+  if (json.root) {
+    if (json.root.type === 'compound') v = json.root.value;
+    else if (json.root.value !== undefined) v = json.root.value;
+    else v = json.root;
+  }
+  if (!v) {
+    if (json.size || json.structure) v = json;
+    else throw new Error('Cannot find NBT root in JSON');
+  }
+  const size = extractIntArray(v.size);
+  const format_version = extractInt(v.format_version);
+  const compressionFlag = extractInt(v.compression);
+  const origin = extractIntArray(v.structure_world_origin);
+  const structureBytes = extractBytes(v.structure);
+  if (!structureBytes) throw new Error('No `structure` byte array found in JSON');
+  return await buildResult({ size, format_version, compressionFlag, origin, structureBytes, fileName, rawRoot: v });
+}
+
+async function processNBT(root, fileName) {
+  const v = root && root.value;
+  if (!v || typeof v !== 'object') throw new Error('NBT root is not a compound');
+  const size = extractIntArray(v.size);
+  const format_version = extractInt(v.format_version);
+  const compressionFlag = extractInt(v.compression);
+  const origin = extractIntArray(v.structure_world_origin);
+  const structureBytes = extractBytes(v.structure);
+  if (!structureBytes) throw new Error('No `structure` byte array found in NBT root');
+  return await buildResult({ size, format_version, compressionFlag, origin, structureBytes, fileName, rawRoot: v });
+}
+
+async function buildResult({ size, format_version, compressionFlag, origin, structureBytes, fileName, rawRoot }) {
+  let innerBytes = structureBytes;
+  let usedFormat = 'none';
+
+  const detected = detectCompression(structureBytes);
+  if (detected) {
+    const r = await tryDecompress(structureBytes, [detected]);
+    innerBytes = r.data;
+    usedFormat = r.format;
+  } else if (compressionFlag === 1) {
+    try {
+      const r = await tryDecompress(structureBytes, ['zlib', 'raw', 'gzip']);
+      innerBytes = r.data;
+      usedFormat = r.format;
+    } catch (e) {
+      if (structureBytes[0] === 0x0A) {
+        usedFormat = 'none (compression flag set, but data looks uncompressed)';
+      } else {
+        throw e;
+      }
+    }
+  } else if (compressionFlag === 0 && structureBytes[0] !== 0x0A) {
+    try {
+      const r = await tryDecompress(structureBytes, ['zlib', 'raw']);
+      innerBytes = r.data;
+      usedFormat = r.format + ' (auto-detected despite flag=0)';
+    } catch (e) { /* leave as-is */ }
+  }
+
+  if (innerBytes.length === 0 || innerBytes[0] !== 0x0A) {
+    throw new Error('Decompressed data is not valid NBT (first byte = 0x' + (innerBytes[0] || 0).toString(16) + ')');
+  }
+  return await finalizeResult({ size, format_version, compressionFlag, origin, innerBytes, fileName, rawRoot, usedFormat });
+}
+
+async function finalizeResult({ size, format_version, compressionFlag, origin, innerBytes, fileName, rawRoot, usedFormat }) {
+  const innerReader = new NBTReader(innerBytes, true);
+  const innerRoot = innerReader.readRoot();
+  return {
+    fileName, size, origin, format_version,
+    compressionFlag: compressionFlag !== undefined ? compressionFlag : 0,
+    usedFormat: usedFormat || 'none',
+    innerRoot, decompressedBytes: innerBytes, rawRoot
+  };
+}
+
+// ========== JSON extractors ==========
+function extractInt(x) {
+  if (x == null) return undefined;
+  if (typeof x === 'number') return x;
+  if (typeof x === 'object') {
+    if (typeof x.value === 'number') return x.value;
+    if (Array.isArray(x.items) && x.items.length) return extractInt(x.items[0]);
+  }
+  return undefined;
+}
+function extractIntArray(x) {
+  if (x == null) return undefined;
+  if (Array.isArray(x) && x.every(n => typeof n === 'number')) return x;
+  if (typeof x === 'object') {
+    if (Array.isArray(x.items)) return x.items.map(extractInt);
+    if (Array.isArray(x.value)) return x.value.map(extractInt);
+    if (x.value && Array.isArray(x.value.items)) return x.value.items.map(extractInt);
+  }
+  return undefined;
+}
+function extractBytes(x) {
+  if (x == null) return null;
+  if (x instanceof Int8Array || x instanceof Uint8Array) return toUint8Array(x);
+  if (Array.isArray(x) && x.every(n => typeof n === 'number')) return toUint8Array(x);
+  if (typeof x === 'object') {
+    if (Array.isArray(x.value)) return toUint8Array(x.value);
+    if (x.value && Array.isArray(x.value.value)) return toUint8Array(x.value.value);
+    if (x.value instanceof Int8Array || x.value instanceof Uint8Array) return toUint8Array(x.value);
+  }
+  return null;
+}
+
+// ========== Rebuild .mcstructure (FIXED) ==========
+function rebuildMcstructure(size, origin, innerRoot, formatVersion) {
+  const w = new NBTWriter(true);
+  // Root compound, empty name
+  w.u8(10); w.u16(0);
+
+  // format_version : int
+  w.u8(3); w.str('format_version'); w.i32(formatVersion !== undefined ? formatVersion : 2);
+
+  // size : list<int> [x,y,z]
+  w.u8(9); w.str('size');
+  w.u8(3); w.i32(3);
+  for (const v of size) w.i32(v);
+
+  // structure : compound (uncompressed NBT payload)
+  w.u8(10); w.str('structure');
+  for (const [k, v] of Object.entries(innerRoot.value)) {
+    writeTag(w, k, v);
+  }
+  w.u8(0); // End structure compound
+
+  // structure_world_origin : list<int>
+  if (origin && origin.length === 3) {
+    w.u8(9); w.str('structure_world_origin');
+    w.u8(3); w.i32(3);
+    for (const v of origin) w.i32(v);
+  }
+
+  // compression : int = 0
+  w.u8(3); w.str('compression'); w.i32(0);
+
+  // End root
+  w.u8(0);
+  return w.finish();
+}
+
+async function rebuildMcstructureCompressed(size, origin, innerRoot, formatVersion) {
+  const innerBytes = serializeNBTNode(innerRoot);
+  const compressedBytes = await compressBytes(innerBytes, 'zlib');
+  
+  const w = new NBTWriter(true);
+  w.u8(10); w.u16(0); // Root compound, empty name
+  w.u8(3); w.str('format_version'); w.i32(formatVersion !== undefined ? formatVersion : 2);
+
+  w.u8(9); w.str('size');
+  w.u8(3); w.i32(3);
+  for (const v of size) w.i32(v);
+
+  // structure : byteArray (zlib compressed)
+  w.u8(7); w.str('structure');
+  w.i32(compressedBytes.length);
+  w.push(compressedBytes);
+
+  if (origin && origin.length === 3) {
+    w.u8(9); w.str('structure_world_origin');
+    w.u8(3); w.i32(3);
+    for (const v of origin) w.i32(v);
+  }
+
+  w.u8(3); w.str('compression'); w.i32(1); // Set flag to 1
+  w.u8(0);
+  return w.finish();
+}
+
+// ========== SNBT generation ==========
+function colorFor(name) {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  const hue = h % 360;
+  const sat = 55 + ((h >> 8) % 20);
+  const light = 42 + ((h >> 16) % 16);
+  return `hsl(${hue} ${sat}% ${light}%)`;
+}
+
+function toSNBT(node, indent = 0) {
+  const pad = '    '.repeat(indent);
+  const padIn = '    '.repeat(indent + 1);
+
+  if (node == null) return 'null';
+  if (typeof node === 'bigint') return node.toString() + 'L';
+  if (typeof node === 'string') {
+    return '"' + node.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
+  }
+  if (typeof node === 'number') return String(node);
+
+  if (node instanceof Int8Array) {
+    const items = Array.from(node).map(v => v + 'b').join(', ');
+    return '[B; ' + items + ']';
+  }
+  if (node instanceof Int32Array) {
+    const items = Array.from(node).map(v => v + '').join(', ');
+    return '[I; ' + items + ']';
+  }
+  if (Array.isArray(node)) {
+    if (node.length === 0) return '[]';
+    const allBigInt = node.every(x => typeof x === 'bigint');
+    if (allBigInt) {
+      const items = node.map(x => x.toString() + 'L').join(', ');
+      return '[L; ' + items + ']';
+    }
+    
+    if (node._nbtType === 4) {
+       const items = node.map(x => x.toString() + 'L').join(', ');
+       return '[' + items + ']';
+    }
+    
+    if (node._nbtType === 5) {
+       const items = node.map(x => {
+         let s = String(x);
+         if (!s.includes('.') && !s.includes('e')) s += '.0';
+         return s + 'f';
+       }).join(', ');
+       return '[' + items + ']';
+    }
+    
+    if (node._nbtType === 6) {
+       const items = node.map(x => {
+         let s = String(x);
+         if (!s.includes('.') && !s.includes('e')) s += '.0';
+         return s + 'd';
+       }).join(', ');
+       return '[' + items + ']';
+    }
+
+    const items = node.map(x => toSNBT(x, indent + 1)).join(', ');
+    return '[' + items + ']';
+  }
+  if (typeof node === 'object') {
+    const keys = Object.keys(node);
+    if (keys.length === 0) return '{}';
+    const items = keys.map(k => {
+      const keyStr = /^[a-zA-Z0-9_\-+.]+$/.test(k) ? k : '"' + k.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
+      return padIn + keyStr + ': ' + toSNBT(node[k], indent + 1);
+    }).join(',\n');
+    return '{\n' + items + '\n' + pad + '}';
+  }
+  return String(node);
+}
+
+function buildDecompressedSNBT(result) {
+  const inner = result.innerRoot && result.innerRoot.value ? result.innerRoot.value : {};
+  const full = {
+    compression: 0,
+    format_version: result.format_version !== undefined ? result.format_version : 2,
+    size: result.size || [0, 0, 0],
+    structure: inner,
+    structure_world_origin: result.origin || [0, 0, 0]
+  };
+  return toSNBT(full);
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]);
+}
+
+function saveBlob(blob, filename) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+// ========== Rendering ==========
+const ICON = {
+  download: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+  package: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
+  copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>',
+  refresh: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>',
+  play: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg>'
+};
+
+let currentResult = null;
+
+function renderResult(result) {
+  currentResult = result;
+  const out = document.getElementById('output');
+  out.innerHTML = '';
+
+  const inner = result.innerRoot && result.innerRoot.value ? result.innerRoot.value : {};
+  const paletteObj = inner.palette || {};
+  const defaultPal = paletteObj.default || {};
+  const blockPalette = defaultPal.block_palette || [];
+  const blockIndices = inner.block_indices || [];
+  const entities = inner.entities || [];
+
+  // ---- info panel ----
+  const info = document.createElement('div');
+  info.className = 'panel';
+  const rows = [
+    ['File', result.fileName],
+    ['Size (X, Y, Z)', (result.size || []).join(' × ')],
+    ['Format version', result.format_version],
+    ['Compression flag (root)', result.compressionFlag],
+    ['Compression detected / used', result.usedFormat],
+    ['World origin', result.origin ? result.origin.join(', ') : '—'],
+    ['Palette entries', blockPalette.length],
+    ['Block index arrays', blockIndices.length],
+    ['Entities', entities.length],
+    ['Decompressed payload', result.decompressedBytes.length + ' bytes'],
+  ];
+  info.innerHTML = '<h2>File info</h2><div class="kv">' +
+    rows.map(([k, v]) => `<div class="k">${escapeHtml(String(k))}</div><div>${escapeHtml(String(v))}</div>`).join('') +
+    '</div>';
+
+  const dl1 = document.createElement('button');
+  dl1.className = 'btn';
+  dl1.innerHTML = ICON.download + '<span>Download NBT</span>';
+  dl1.title = 'Download the raw decompressed NBT payload';
+  dl1.onclick = () => {
+    const blob = new Blob([result.decompressedBytes], { type: 'application/octet-stream' });
+    saveBlob(blob, (result.fileName || 'structure').replace(/\.[^.]+$/, '') + '.decompressed.nbt');
+  };
+
+  const dl2 = document.createElement('button');
+  dl2.className = 'btn primary';
+  dl2.innerHTML = ICON.package + '<span>Download .mcstructure</span>';
+  dl2.title = 'Download a rebuilt .mcstructure (compression=0). Uses current textarea if edited.';
+  dl2.onclick = () => {
+    try {
+      const ta = document.getElementById('snbt-editor');
+      if (!ta) throw new Error('SNBT editor not found');
+      const tree = parseSNBT(ta.value);
+      if (tree.type !== 'compound') throw new Error('SNBT root must be a compound');
+      const structureNode = tree.value.structure;
+      if (!structureNode || structureNode.type !== 'compound') {
+        throw new Error('SNBT must contain a `structure` compound');
+      }
+      const size = tree.value.size ? tree.value.size.value.map(x => x.value) : result.size;
+      const origin = tree.value.structure_world_origin
+        ? tree.value.structure_world_origin.value.map(x => x.value)
+        : result.origin;
+      const fmt = tree.value.format_version ? tree.value.format_version.value : result.format_version;
+      const rebuilt = rebuildMcstructure(size, origin, structureNode, fmt);
+      
+      // Verify
+      if (rebuilt.length === 0 || rebuilt[0] !== 0x0A) {
+        throw new Error('Rebuilt file did not start with compound tag byte (0x0A). Got 0x' + (rebuilt[0] || 0).toString(16) + '. Length: ' + rebuilt.length);
+      }
+      try {
+        const verify = new NBTReader(rebuilt, true);
+        verify.readRoot();
+      } catch (e) {
+        throw new Error('Rebuilt NBT failed to parse: ' + e.message);
+      }
+      const blob = new Blob([rebuilt], { type: 'application/octet-stream' });
+      saveBlob(blob, (result.fileName || 'structure').replace(/\.[^.]+$/, '') + '.uncompressed.mcstructure');
+    } catch (e) {
+      alert('Rebuild failed:\n' + e.message);
+    }
+  };
+
+  const dl3 = document.createElement('button');
+  dl3.className = 'btn primary';
+  dl3.innerHTML = ICON.package + '<span>Download compressed .mcstructure</span>';
+  dl3.title = 'Download a rebuilt .mcstructure (compression=1, zlib). Uses current textarea.';
+  dl3.onclick = async () => {
+    try {
+      const ta = document.getElementById('snbt-editor');
+      if (!ta) throw new Error('SNBT editor not found');
+      const tree = parseSNBT(ta.value);
+      if (tree.type !== 'compound') throw new Error('SNBT root must be a compound');
+      const structureNode = tree.value.structure;
+      if (!structureNode || structureNode.type !== 'compound') {
+        throw new Error('SNBT must contain a `structure` compound');
+      }
+      const size = tree.value.size ? tree.value.size.value.map(x => x.value) : result.size;
+      const origin = tree.value.structure_world_origin
+        ? tree.value.structure_world_origin.value.map(x => x.value)
+        : result.origin;
+      const fmt = tree.value.format_version ? tree.value.format_version.value : result.format_version;
+      const rebuilt = await rebuildMcstructureCompressed(size, origin, structureNode, fmt);
+      
+      if (rebuilt.length === 0 || rebuilt[0] !== 0x0A) {
+        throw new Error('Rebuilt file did not start with compound tag byte (0x0A).');
+      }
+      try {
+        const verify = new NBTReader(rebuilt, true);
+        verify.readRoot();
+      } catch (e) {
+        throw new Error('Rebuilt NBT failed to parse: ' + e.message);
+      }
+      const blob = new Blob([rebuilt], { type: 'application/octet-stream' });
+      saveBlob(blob, (result.fileName || 'structure').replace(/\.[^.]+$/, '') + '.compressed.mcstructure');
+    } catch (e) {
+      alert('Rebuild failed:\n' + e.message);
+    }
+  };
+
+  const dl4 = document.createElement('button');
+  dl4.className = 'btn';
+  dl4.innerHTML = ICON.copy + '<span>Copy SNBT</span>';
+  dl4.title = 'Copy the current SNBT textarea content';
+  dl4.onclick = async () => {
+    try {
+      const ta = document.getElementById('snbt-editor');
+      const snbt = ta ? ta.value : buildDecompressedSNBT(result);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(snbt);
+      } else {
+        const tmp = document.createElement('textarea');
+        tmp.value = snbt;
+        document.body.appendChild(tmp);
+        tmp.select();
+        document.execCommand('copy');
+        document.body.removeChild(tmp);
+      }
+      dl4.innerHTML = ICON.check + '<span>Copied!</span>';
+      dl4.classList.add('primary');
+      setTimeout(() => {
+        dl4.innerHTML = ICON.copy + '<span>Copy SNBT</span>';
+        dl4.classList.remove('primary');
+      }, 1500);
+    } catch (e) {
+      alert('Copy failed: ' + e.message);
+    }
+  };
+
+  const dlWrap = document.createElement('div');
+  dlWrap.className = 'btn-row';
+  dlWrap.appendChild(dl1); dlWrap.appendChild(dl2); dlWrap.appendChild(dl3); dlWrap.appendChild(dl4);
+  info.appendChild(dlWrap);
+  
+  // ---- command block towers ----
+  const blockPosData = defaultPal.block_position_data || {};
+  const cbList = [];
+  for (const [posIdxStr, posData] of Object.entries(blockPosData)) {
+    const posIdx = parseInt(posIdxStr, 10);
+    if (isNaN(posIdx) || !posData || !posData.block_entity_data) continue;
+    const bed = posData.block_entity_data;
+    if (bed.id !== 'CommandBlock') continue;
+    
+    let bType = 'command_block';
+    if (blockIndices[0] && blockIndices[0][posIdx] !== undefined) {
+      const palIdx = blockIndices[0][posIdx];
+      const palEntry = blockPalette[palIdx];
+      if (palEntry && palEntry.name) {
+        if (palEntry.name.includes('repeating')) bType = 'repeating';
+        else if (palEntry.name.includes('chain')) bType = 'chain';
+        else if (palEntry.name.includes('command_block')) bType = 'impulse';
+      }
+    }
+
+    cbList.push({
+      x: bed.x, y: bed.y, z: bed.z,
+      command: bed.Command || '',
+      delay: bed.TickDelay || 0,
+      customName: bed.CustomName || '',
+      conditional: bed.conditionalMode === 1,
+      auto: bed.auto === 1,
+      type: bType
+    });
+  }
+
+  if (cbList.length > 0) {
+    // Group contiguous command blocks using flood fill
+    const groups = [];
+    const visited = new Set();
+    const posMap = new Map();
+    cbList.forEach(cb => posMap.set(`${cb.x},${cb.y},${cb.z}`, cb));
+
+    for (const cb of cbList) {
+      const key = `${cb.x},${cb.y},${cb.z}`;
+      if (visited.has(key)) continue;
+
+      const group = [];
+      const queue = [cb];
+      visited.add(key);
+
+      while (queue.length > 0) {
+        const current = queue.shift();
+        group.push(current);
+
+        const neighbors = [
+          {x: current.x+1, y: current.y, z: current.z},
+          {x: current.x-1, y: current.y, z: current.z},
+          {x: current.x, y: current.y+1, z: current.z},
+          {x: current.x, y: current.y-1, z: current.z},
+          {x: current.x, y: current.y, z: current.z+1},
+          {x: current.x, y: current.y, z: current.z-1},
+        ];
+
+        for (const n of neighbors) {
+          const nKey = `${n.x},${n.y},${n.z}`;
+          if (posMap.has(nKey) && !visited.has(nKey)) {
+            visited.add(nKey);
+            queue.push(posMap.get(nKey));
+          }
+        }
+      }
+
+      // Determine primary axis for sorting and labeling
+      let minX = Infinity, maxX = -Infinity;
+      let minY = Infinity, maxY = -Infinity;
+      let minZ = Infinity, maxZ = -Infinity;
+      
+      group.forEach(c => {
+        if (c.x < minX) minX = c.x;
+        if (c.x > maxX) maxX = c.x;
+        if (c.y < minY) minY = c.y;
+        if (c.y > maxY) maxY = c.y;
+        if (c.z < minZ) minZ = c.z;
+        if (c.z > maxZ) maxZ = c.z;
+      });
+
+      const spreadX = maxX - minX;
+      const spreadY = maxY - minY;
+      const spreadZ = maxZ - minZ;
+
+      let isTower = spreadY >= spreadX && spreadY >= spreadZ;
+      
+      if (isTower) {
+        group.sort((a, b) => a.y - b.y);
+      } else if (spreadX >= spreadY && spreadX >= spreadZ) {
+        group.sort((a, b) => a.x - b.x);
+      } else {
+        group.sort((a, b) => a.z - b.z);
+      }
+
+      groups.push({ blocks: group, isTower });
+    }
+
+    // Sort the groups by their first block coordinates
+    groups.sort((a, b) => {
+      const A = a.blocks[0];
+      const B = b.blocks[0];
+      return A.x - B.x || A.z - B.z || A.y - B.y;
+    });
+
+    let towerText = '=============\n';
+    groups.forEach((g, i) => {
+      const t = g.blocks;
+      const label = g.isTower ? 'tower' : 'line';
+      const start = t[0];
+      const end = t[t.length - 1];
+      
+      let coordStr = `${start.x} ${start.y} ${start.z}`;
+      if (t.length > 1 && (start.x !== end.x || start.y !== end.y || start.z !== end.z)) {
+        coordStr += ` to ${end.x} ${end.y} ${end.z}`;
+      }
+      
+      towerText += `${label} ${i + 1}: coords ${coordStr}\n\n`;
+      t.forEach(b => {
+        let typeStr = b.type;
+        if (typeStr === 'repeating') typeStr = 'Repeat';
+        else if (typeStr === 'chain') typeStr = 'Chain';
+        else if (typeStr === 'impulse' || typeStr === 'command_block') typeStr = 'Impulse';
+        
+        let flags = [];
+        if (b.auto) flags.push('Always Active');
+        else flags.push('Needs Redstone');
+        if (b.conditional) flags.push('Conditional');
+        const flagStr = ` (${flags.join(', ')})`;
+
+        const cname = b.customName ? `[${b.customName}] ` : '';
+        const cmd = b.command.startsWith('/') ? b.command : '/' + b.command;
+
+        towerText += `${cname}${typeStr} Delay ${b.delay}${flagStr}\n`;
+        towerText += `${cmd}\n`;
+      });
+      towerText += `\n======================================\n\n`;
+    });
+
+    const cp = document.createElement('div');
+    cp.className = 'panel';
+    cp.innerHTML = '<h2>Command Block Layout</h2>' +
+      '<div class="note">Command blocks automatically grouped by their X/Z coordinates and ordered. Includes CustomName, conditional state, and auto state.</div>' +
+      '<textarea class="snbt-editor" id="command-towers-text" style="min-height: 180px; max-height: 400px;" readonly></textarea>' +
+      '<div class="btn-row"><button class="btn primary" id="copy-towers-btn">' + ICON.copy + '<span>Copy Commands</span></button></div>';
+    
+    const ta = cp.querySelector('#command-towers-text');
+    ta.value = towerText;
+    
+    const copyBtn = cp.querySelector('#copy-towers-btn');
+    copyBtn.onclick = async () => {
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(ta.value);
+        } else {
+          ta.select();
+          document.execCommand('copy');
+        }
+        copyBtn.innerHTML = ICON.check + '<span>Copied!</span>';
+        setTimeout(() => { copyBtn.innerHTML = ICON.copy + '<span>Copy Commands</span>'; }, 1500);
+      } catch (e) {
+        alert('Copy failed: ' + e.message);
+      }
+    };
+    out.appendChild(cp);
+  }
+
+  out.appendChild(info);
+
+  // ---- SNBT editor ----
+  const editorPanel = document.createElement('div');
+  editorPanel.className = 'panel';
+  const snbtInitial = buildDecompressedSNBT(result);
+  editorPanel.innerHTML = '<h2>Edit SNBT</h2>' +
+    '<div class="note">Edit the SNBT below, then click <strong>Apply &amp; preview</strong> to update the palette/layout, or <strong>Download .mcstructure</strong> above. ' +
+    'Type suffixes: <code>5b</code> byte, <code>5s</code> short, <code>5L</code> long, <code>5.0f</code> float, <code>5.0d</code> double. Arrays: <code>[B; 1b, 2b]</code>, <code>[I; 1, 2]</code>, <code>[L; 1L, 2L]</code>.</div>' +
+    '<textarea class="snbt-editor" id="snbt-editor" spellcheck="false"></textarea>' +
+    '<div class="btn-row" id="snbt-btns"></div>';
+
+  const textarea = editorPanel.querySelector('#snbt-editor');
+  textarea.value = snbtInitial;
+  textarea.dataset.dirty = 'false';
+
+  textarea.addEventListener('input', () => {
+    if (textarea.dataset.dirty !== 'true') {
+      textarea.dataset.dirty = 'true';
+      textarea.classList.add('dirty');
+    }
+  });
+
+  const btnContainer = editorPanel.querySelector('#snbt-btns');
+
+  const reloadBtn = document.createElement('button');
+  reloadBtn.className = 'btn';
+  reloadBtn.innerHTML = ICON.refresh + '<span>Reload from file</span>';
+  reloadBtn.title = 'Reset the textarea to the SNBT of the currently loaded structure';
+  reloadBtn.onclick = () => {
+    textarea.value = buildDecompressedSNBT(currentResult);
+    textarea.dataset.dirty = 'false';
+    textarea.classList.remove('dirty');
+  };
+
+  const applyBtn = document.createElement('button');
+  applyBtn.className = 'btn';
+  applyBtn.innerHTML = ICON.play + '<span>Apply &amp; preview</span>';
+  applyBtn.title = 'Parse the textarea, update the structure in memory, and re-render';
+  applyBtn.onclick = async () => {
+    try {
+      const tree = parseSNBT(textarea.value);
+      if (tree.type !== 'compound') throw new Error('SNBT root must be a compound');
+      const structureNode = tree.value.structure;
+      if (!structureNode || structureNode.type !== 'compound') {
+        throw new Error('SNBT must contain a `structure` compound');
+      }
+      const inner = serializeNBTNode(structureNode);
+      const reader = new NBTReader(inner, true);
+      const innerRoot = reader.readRoot();
+      const size = tree.value.size ? tree.value.size.value.map(x => x.value) : currentResult.size;
+      const origin = tree.value.structure_world_origin
+        ? tree.value.structure_world_origin.value.map(x => x.value)
+        : currentResult.origin;
+      const fmt = tree.value.format_version ? tree.value.format_version.value : currentResult.format_version;
+      const updated = {
+        fileName: currentResult.fileName,
+        size, origin, format_version: fmt,
+        compressionFlag: 0,
+        usedFormat: 'rebuilt from SNBT',
+        innerRoot, decompressedBytes: inner, rawRoot: currentResult.rawRoot
+      };
+      renderResult(updated);
+      setStatus('ok', 'SNBT applied. Palette and layout updated.');
+    } catch (e) {
+      setStatus('err', 'Apply failed: ' + e.message);
+    }
+  };
+
+  const downloadFromSNBTBtn = document.createElement('button');
+  downloadFromSNBTBtn.className = 'btn primary';
+  downloadFromSNBTBtn.innerHTML = ICON.package + '<span>Download uncompressed .mcstructure</span>';
+  downloadFromSNBTBtn.title = 'Parse the textarea and download a fresh .mcstructure (compression=0)';
+  downloadFromSNBTBtn.onclick = () => {
+    try {
+      const tree = parseSNBT(textarea.value);
+      if (tree.type !== 'compound') throw new Error('SNBT root must be a compound');
+      const structureNode = tree.value.structure;
+      if (!structureNode || structureNode.type !== 'compound') {
+        throw new Error('SNBT must contain a `structure` compound');
+      }
+      const size = tree.value.size ? tree.value.size.value.map(x => x.value) : currentResult.size;
+      const origin = tree.value.structure_world_origin
+        ? tree.value.structure_world_origin.value.map(x => x.value)
+        : currentResult.origin;
+      const fmt = tree.value.format_version ? tree.value.format_version.value : currentResult.format_version;
+      const rebuilt = rebuildMcstructure(size, origin, structureNode, fmt);
+      if (rebuilt.length === 0 || rebuilt[0] !== 0x0A) {
+        throw new Error('Rebuilt file did not start with compound tag byte (0x0A).');
+      }
+      try { new NBTReader(rebuilt, true).readRoot(); }
+      catch (e) { throw new Error('Rebuilt NBT failed to parse: ' + e.message); }
+      const blob = new Blob([rebuilt], { type: 'application/octet-stream' });
+      saveBlob(blob, (currentResult.fileName || 'structure').replace(/\.[^.]+$/, '') + '.edited.mcstructure');
+      setStatus('ok', 'Downloaded edited .mcstructure (' + rebuilt.length + ' bytes).');
+    } catch (e) {
+      setStatus('err', 'Download failed: ' + e.message);
+    }
+  };
+
+  const downloadCompressedFromSNBTBtn = document.createElement('button');
+  downloadCompressedFromSNBTBtn.className = 'btn primary';
+  downloadCompressedFromSNBTBtn.innerHTML = ICON.package + '<span>Download compressed .mcstructure</span>';
+  downloadCompressedFromSNBTBtn.title = 'Parse the textarea, compress with zlib, and download (compression=1)';
+  downloadCompressedFromSNBTBtn.onclick = async () => {
+    try {
+      const tree = parseSNBT(textarea.value);
+      if (tree.type !== 'compound') throw new Error('SNBT root must be a compound');
+      const structureNode = tree.value.structure;
+      if (!structureNode || structureNode.type !== 'compound') {
+        throw new Error('SNBT must contain a `structure` compound');
+      }
+      const size = tree.value.size ? tree.value.size.value.map(x => x.value) : currentResult.size;
+      const origin = tree.value.structure_world_origin
+        ? tree.value.structure_world_origin.value.map(x => x.value)
+        : currentResult.origin;
+      const fmt = tree.value.format_version ? tree.value.format_version.value : currentResult.format_version;
+      const rebuilt = await rebuildMcstructureCompressed(size, origin, structureNode, fmt);
+      if (rebuilt.length === 0 || rebuilt[0] !== 0x0A) {
+        throw new Error('Rebuilt file did not start with compound tag byte (0x0A).');
+      }
+      try { new NBTReader(rebuilt, true).readRoot(); }
+      catch (e) { throw new Error('Rebuilt NBT failed to parse: ' + e.message); }
+      const blob = new Blob([rebuilt], { type: 'application/octet-stream' });
+      saveBlob(blob, (currentResult.fileName || 'structure').replace(/\.[^.]+$/, '') + '.compressed.mcstructure');
+      setStatus('ok', 'Downloaded compressed .mcstructure (' + rebuilt.length + ' bytes).');
+    } catch (e) {
+      setStatus('err', 'Download failed: ' + e.message);
+    }
+  };
+
+  btnContainer.appendChild(reloadBtn);
+  btnContainer.appendChild(applyBtn);
+  btnContainer.appendChild(downloadFromSNBTBtn);
+  btnContainer.appendChild(downloadCompressedFromSNBTBtn);
+
+  out.appendChild(editorPanel);
+
+  // ---- palette ----
+  if (blockPalette.length) {
+    const p = document.createElement('div');
+    p.className = 'panel';
+    let html = '<h2>Palette</h2><div class="palette">';
+    blockPalette.forEach((entry, i) => {
+      const name = entry.name || '(unnamed)';
+      const states = entry.states && Object.keys(entry.states).length
+        ? JSON.stringify(entry.states) : '';
+      html += `<div class="row">
+        <div class="idx">${i}</div>
+        <div class="swatch" style="background:${colorFor(name)}"></div>
+        <div>${escapeHtml(name)}</div>
+        ${states ? `<div class="states">${escapeHtml(states)}</div>` : ''}
+      </div>`;
+    });
+    html += '</div>';
+    p.innerHTML = html;
+    out.appendChild(p);
+  }
+
+  // ---- slices ----
+  if (result.size && result.size.length === 3 && blockIndices.length && blockPalette.length) {
+    const [sx, sy, sz] = result.size;
+    const totalBlocks = sx * sy * sz;
+
+    if (totalBlocks > 20000) {
+      const warn = document.createElement('div');
+      warn.className = 'panel';
+      warn.innerHTML = `<h2>Layout</h2><div class="note">Structure is large (${totalBlocks} blocks). Visual layout skipped to keep the page responsive.</div>`;
+      out.appendChild(warn);
+    } else {
+      const panel = document.createElement('div');
+      panel.className = 'panel';
+      let html = '<h2>Block layout (Y slices)</h2>';
+      html += '<div class="note">Cell label = palette index. Hover for block name.</div>';
+      html += '<div class="slices">';
+
+      const primaryIdx = blockIndices[0] || [];
+      const secondaryIdx = blockIndices[1] || [];
+      const showSecondary = secondaryIdx.length && secondaryIdx.some(v => v >= 0);
+
+      for (let y = 0; y < sy; y++) {
+        html += `<div class="slice"><h3>Y = ${y}</h3><div class="grid" style="grid-template-columns: repeat(${sx}, 26px)">`;
+        for (let z = 0; z < sz; z++) {
+          for (let x = 0; x < sx; x++) {
+            const pos = y * sx * sz + z * sx + x;
+            const pi = primaryIdx[pos];
+            const si = secondaryIdx[pos];
+            if (pi == null || pi < 0) {
+              html += `<div class="cell empty" title="air">·</div>`;
+            } else {
+              const entry = blockPalette[pi] || { name: '???' };
+              const nm = entry.name || '???';
+              const sec = showSecondary && si >= 0 ? ` + secondary[${si}]` : '';
+              html += `<div class="cell" style="background:${colorFor(nm)}" title="${escapeHtml(nm)} (palette ${pi})${escapeHtml(sec)}">${pi}</div>`;
+            }
+          }
+        }
+        html += '</div></div>';
+      }
+      html += '</div>';
+      panel.innerHTML = html;
+      out.appendChild(panel);
+
+      if (showSecondary) {
+        const sec = document.createElement('div');
+        sec.className = 'panel';
+        let h = '<h2>Secondary block layer (block_indices[1])</h2>';
+        h += '<div class="note">Non-negative entries index the same palette.</div>';
+        h += '<div class="slices">';
+        for (let y = 0; y < sy; y++) {
+          h += `<div class="slice"><h3>Y = ${y}</h3><div class="grid" style="grid-template-columns: repeat(${sx}, 26px)">`;
+          for (let z = 0; z < sz; z++) {
+            for (let x = 0; x < sx; x++) {
+              const pos = y * sx * sz + z * sx + x;
+              const si = secondaryIdx[pos];
+              if (si == null || si < 0) {
+                h += `<div class="cell empty" title="none">·</div>`;
+              } else {
+                const entry = blockPalette[si] || { name: '???' };
+                const nm = entry.name || '???';
+                h += `<div class="cell" style="background:${colorFor(nm)}" title="${escapeHtml(nm)} (palette ${si})">${si}</div>`;
+              }
+            }
+          }
+          h += '</div></div>';
+        }
+        h += '</div>';
+        sec.innerHTML = h;
+        out.appendChild(sec);
+      }
+    }
+  }
+
+  // ---- raw NBT tree ----
+  const rawPanel = document.createElement('div');
+  rawPanel.className = 'panel';
+  rawPanel.innerHTML = '<h2>Decompressed NBT tree</h2><details><summary>Show / hide raw NBT</summary><pre></pre></details>';
+  rawPanel.querySelector('pre').textContent = stringifyNBT(result.innerRoot);
+  out.appendChild(rawPanel);
+
+  if (result.rawRoot) {
+    const orig = document.createElement('div');
+    orig.className = 'panel';
+    orig.innerHTML = '<h2>Original root NBT (before decompression)</h2><details><summary>Show / hide</summary><pre></pre></details>';
+    orig.querySelector('pre').textContent = stringifyNBT({ type: 10, name: '', value: result.rawRoot });
+    out.appendChild(orig);
+  }
+}
+
+function stringifyNBT(node, indent = 0) {
+  const pad = '  '.repeat(indent);
+  if (node == null) return pad + 'null';
+  if (typeof node === 'bigint') return pad + node.toString() + 'n';
+  if (typeof node !== 'object') return pad + JSON.stringify(node);
+  if (node instanceof Int8Array) {
+    const preview = Array.from(node.slice(0, 16)).join(', ');
+    const more = node.length > 16 ? `, … (${node.length} total)` : '';
+    return pad + `[byteArray] ${preview}${more}`;
+  }
+  if (node instanceof Int32Array) return pad + `[intArray ${node.length}]`;
+  if (Array.isArray(node)) {
+    const items = node.map(x => stringifyNBT(x, indent + 1)).join(',\n');
+    return pad + '[\n' + items + '\n' + pad + ']';
+  }
+  const keys = Object.keys(node);
+  const parts = keys.map(k => pad + '  ' + JSON.stringify(k) + ': ' + stringifyNBT(node[k], indent + 1).trimStart());
+  return pad + '{\n' + parts.join(',\n') + '\n' + pad + '}';
+}
+
+// ========== UI wiring ==========
+const drop = document.getElementById('drop');
+const fileInput = document.getElementById('file');
+const statusEl = document.getElementById('status');
+
+function setStatus(kind, msg) {
+  statusEl.style.display = 'block';
+  statusEl.className = kind || '';
+  statusEl.textContent = msg;
+}
+
+document.getElementById('browse-btn').addEventListener('click', () => fileInput.click());
+
+let dragCounter = 0;
+window.addEventListener('dragenter', (e) => {
+  e.preventDefault();
+  if (e.dataTransfer && e.dataTransfer.types.includes('Files')) {
+    dragCounter++;
+    document.getElementById('drop-overlay').classList.add('active');
+  }
+});
+window.addEventListener('dragleave', (e) => {
+  e.preventDefault();
+  dragCounter--;
+  if (dragCounter === 0) {
+    document.getElementById('drop-overlay').classList.remove('active');
+  }
+});
+window.addEventListener('dragover', (e) => { e.preventDefault(); });
+window.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dragCounter = 0;
+  document.getElementById('drop-overlay').classList.remove('active');
+  if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e => { if (e.target.files.length) handleFile(e.target.files[0]); });
+
+async function handleFile(file) {
+  setStatus('', 'Processing ' + file.name + ' …');
+  document.getElementById('output').innerHTML = '';
+  try {
+    const result = await processFile(file);
+    setStatus('ok', '✓ Decompressed successfully (' + result.decompressedBytes.length + ' bytes of NBT).');
+    renderResult(result);
+  } catch (err) {
+    console.error(err);
+    setStatus('err', '✗ ' + (err && err.message ? err.message : String(err)));
+  }
+}
+</script>
+</body>
+</html>
